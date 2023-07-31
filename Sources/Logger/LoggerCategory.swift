@@ -1,9 +1,11 @@
 import Foundation
 
+/// Provides possibility to use custom type for logger category
 public protocol LoggerCategory {
-    var string: String { get }
+    /// String representation for a category instance
+    var rawLoggerCategory: String { get }
 }
 
 extension String: LoggerCategory {
-    public var string: String { self }
+    public var rawLoggerCategory: String { self }
 }

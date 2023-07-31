@@ -1,27 +1,42 @@
 import Foundation
 
+/// Describes what a logger have to do
 public protocol LoggerEngine {
-    func write(group: LoggerCategory?, _ message: String, logType: LogType, _ file: String, _ line: Int)
-    func write(group: LoggerCategory?, _ message: String, logType: LogType, _ file: String, _ line: Int) async
 
+    /// Writes a message to a logger source
+    /// - Parameters:
+    ///   - message: Log initial message
+    ///   - category: Category of the message to indicate the message in a system
+    ///   - logType: Type of the message
+    ///   - file: File, where the method is called
+    ///   - line: Line in the file
+    func write(_ message: String, of category: LoggerCategory?, as logType: LogType, _ file: String, _ line: Int)
+
+    /// Saves pending messages
     func flush()
-    func flush() async
 }
 
 extension LoggerEngine {
-    public func write(group: LoggerCategory? = nil, _ message: String, logType: LogType, _ file: String = #filePath, _ line: Int = #line) {
-        write(group: group, message, logType: logType, file, line)
+    /// Writes a message to a logger source
+    /// - Parameters:
+    ///   - message: Log initial message
+    ///   - category: Category of the message to indicate the message in a system
+    ///   - logType: Type of the message
+    ///   - file: File, where the method is called
+    ///   - line: Line in the file
+    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType,
+                      _ file: String = #fileID, _ line: Int = #line) {
+        write(message, of: category, as: logType, file, line)
     }
 
-    public func write(group: LoggerCategory? = nil, _ message: String, _ file: String = #filePath, _ line: Int = #line) {
-        write(group: group, message, logType: .default, file, line)
-    }
-
-    public func write(group: LoggerCategory? = nil, _ message: String, logType: LogType, _ file: String = #filePath, _ line: Int = #line) async {
-        await write(group: group, message, logType: logType, file, line)
-    }
-
-    public func write(group: LoggerCategory? = nil, _ message: String, _ file: String = #filePath, _ line: Int = #line) async {
-        await write(group: group, message, logType: .default, file, line)
+    /// Writes a message to a logger source with default log type
+    /// - Parameters:
+    ///   - message: Log initial message
+    ///   - category: Category of the message to indicate the message in a system
+    ///   - file: File, where the method is called
+    ///   - line: Line in the file
+    public func write(_ message: String, of category: LoggerCategory? = nil,
+                      _ file: String = #fileID, _ line: Int = #line) {
+        write(message, of: category, as: .default, file, line)
     }
 }
