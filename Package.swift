@@ -7,7 +7,8 @@ let package = Package(
     name: "Logger",
     platforms: [
         .iOS(.v13),
-        .macOS(.v10_15)
+        .macOS(.v10_15),
+        .tvOS(.v13)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -26,7 +27,7 @@ let package = Package(
             name: "Logger",
             dependencies: [],
             swiftSettings: [
-                .define("BUILD_LIBRARY_FOR_DISTRIBUTION=YES")
+                .define("BUILD_LIBRARY_FOR_DISTRIBUTION")
             ]
         ),
         .testTarget(
