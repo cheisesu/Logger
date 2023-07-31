@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "9DDEA8B3-8DE1-49FD-8F62-A6E88EDD7B9D",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "LoggerTests",
+        "name" : "LoggerTests"
+      }
+    }
+  ],
+  "version" : 1
+}
