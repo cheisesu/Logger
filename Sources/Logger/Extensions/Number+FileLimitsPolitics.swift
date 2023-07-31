@@ -88,7 +88,7 @@ extension Float: FileLimitsPolitics {
     }
 }
 
-@available(tvOS 14.0, *)
+@available(macOS 11.0, tvOS 14.0, iOS 14.0, *)
 extension Float16: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         return Measurement(value: Double(self), unit: .bytes)

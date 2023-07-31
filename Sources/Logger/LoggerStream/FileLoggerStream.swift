@@ -44,7 +44,7 @@ public final class FileLoggerStream: LoggerStream {
         do {
             let data = Data(string.utf8)
             let size = Measurement(value: Double(data.count), unit: UnitInformationStorage.bytes)
-            if #available(tvOS 13.4, *) {
+            if #available(tvOS 13.4, macOS 10.15.4, iOS 13.4, *) {
                 try fileHandle.write(contentsOf: data)
             } else {
                 fileHandle.write(data)
