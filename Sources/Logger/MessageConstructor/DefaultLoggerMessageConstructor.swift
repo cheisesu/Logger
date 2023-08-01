@@ -49,8 +49,11 @@ public class DefaultLoggerMessageConstructor: LoggerMessageConstructor {
         if options.contains(.printLine) {
             meta.append("\(line)")
         }
-        let metaString = meta.joined(separator: ":")
-        let result = [resultMessage, metaString].joined(separator: "\n")
+        var metaString: String? = meta.joined(separator: ":")
+        if metaString?.count == 0 {
+            metaString = nil
+        }
+        let result = [resultMessage, metaString].compactMap { $0 }.joined(separator: "\n")
         return result
     }
 }
