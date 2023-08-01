@@ -14,12 +14,15 @@ public final class CountingFileRotationURLPolitics: FileURLRotationPolitics {
     }
 
     public func nextFileURL(for source: URL) -> URL {
-        let nextNumber = nextNumber(for: source)
+        guard maxNumber > 0 else { return source }
+        guard let nextNumber = nextNumber(for: source) else { return source }
         let newURL = source.appendingPathExtension("\(nextNumber)")
         return newURL
     }
 
-    private func nextNumber(for source: URL) -> Int {
+    private func nextNumber(for source: URL) -> Int? {
+        let exists = fileManager.fileExists(atPath: source.path)
+        guard exists else { return nil }
         let name = source.lastPathComponent
         let directory = source.deletingLastPathComponent()
         let urls = (try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
