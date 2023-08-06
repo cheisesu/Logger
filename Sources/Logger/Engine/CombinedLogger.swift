@@ -6,7 +6,7 @@ public class CombinedLogger: LoggerEngine {
 
     /// Constructs with other engines
     /// - Parameter engines: Array of engine instances
-    public init(engines: [LoggerEngine]) {
+    public init(_ engines: [LoggerEngine]) {
         self.engines = engines
     }
 
