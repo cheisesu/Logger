@@ -28,4 +28,12 @@ final class _ErrorFileManager: FileManager {
     override func createDirectory(atPath path: String, withIntermediateDirectories createIntermediates: Bool, attributes: [FileAttributeKey : Any]? = nil) throws {
         throw Error.justAnError
     }
+
+    override func contentsOfDirectory(atPath path: String) throws -> [String] {
+        throw Error.justAnError
+    }
+
+    override func contentsOfDirectory(at url: URL, includingPropertiesForKeys keys: [URLResourceKey]?, options mask: FileManager.DirectoryEnumerationOptions = []) throws -> [URL] {
+        throw Error.justAnError
+    }
 }

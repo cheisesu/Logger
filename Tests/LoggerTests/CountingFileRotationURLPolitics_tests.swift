@@ -109,4 +109,20 @@ final class CountingFileRotationURLPolitics_tests: XCTestCase {
             XCTAssertEqual(result, sourceURL)
         }
     }
+
+    func test_NextFileURL_FileError_ReturnsNextURL() throws {
+        let fileManager = _ErrorFileManager()
+        let politics: FileURLRotationPolitics = CountingFileRotationURLPolitics(fileManager: fileManager, maxNumber: 1)
+
+        try handleFolder { tempDir in
+            let fileName = "file._tf"
+            let sourceURL = tempDir.appendingPathComponent(fileName, isDirectory: false)
+            try Data().write(to: sourceURL)
+            let nextURL = tempDir.appendingPathComponent("\(fileName).1", isDirectory: false)
+
+            let result = politics.nextFileURL(for: sourceURL)
+
+            XCTAssertEqual(result, nextURL)
+        }
+    }
 }
