@@ -10,7 +10,7 @@ public final class FileLoggerStream: LoggerStream {
     private var currentSize: Measurement<UnitInformationStorage>
 
     public init(_ sourceURL: URL, fileManager: FileManager = .default,
-                fileLimits: FileLimitsPolitics, rotationURLPolitics: FileURLRotationPolitics?) throws {
+                fileLimits: FileLimitsPolitics = 0, rotationURLPolitics: FileURLRotationPolitics? = nil) throws {
         self.sourceURL = sourceURL
         self.fileManager = fileManager
         lock = NSLock()
@@ -33,12 +33,14 @@ public final class FileLoggerStream: LoggerStream {
 
     deinit {
         do {
+            flush()
             try fileHandle.close()
         } catch {
         }
     }
 
     public func write(_ string: String) {
+        let string = string + "\n"
         lock.lock()
         defer { lock.unlock() }
         do {
@@ -59,11 +61,7 @@ public final class FileLoggerStream: LoggerStream {
 
     public func flush() {
         lock.lock()
-        defer { lock.unlock() }
-        do {
-            try fileHandle.synchronize()
-        } catch {
-        }
+        lock.unlock()
     }
 
     private func changeFile() {
