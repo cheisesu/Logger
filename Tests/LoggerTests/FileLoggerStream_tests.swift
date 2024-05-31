@@ -21,14 +21,14 @@ final class FileLoggerStream_tests: XCTestCase {
     func test_SourceFileExists_Write_AppendsToEnd() throws {
         try handleFile { fileURL in
             let initialContent = "Initial content\n"
-            let additionalContent = "Additional content"
+            let additionalContent = "Additional content\n"
             try initialContent.write(to: fileURL, atomically: true, encoding: .utf8)
 
             let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager)
             loggerStream.write(additionalContent)
             let loadedContent = try String(contentsOf: fileURL, encoding: .utf8)
 
-            XCTAssertEqual(loadedContent, initialContent + additionalContent + "\n")
+            XCTAssertEqual(loadedContent, initialContent + additionalContent)
         }
     }
 
@@ -46,15 +46,20 @@ final class FileLoggerStream_tests: XCTestCase {
     func test_ConcurrentWrite_NoRotation_WrittenFullContent() throws {
         try handleFile { fileURL in
             let count = 500
-            let contents: [String] = (0..<count).map { "this is a test line \($0)" }
+            let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
             let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager)
 
+            let group = DispatchGroup()
+            (0..<count).forEach { _ in group.enter() }
             DispatchQueue.concurrentPerform(iterations: count) { index in
                 let line = contents[index]
                 loggerStream.write(line)
+                group.leave()
             }
+            let waitResult = group.wait(timeout: .now() + 5)
+            XCTAssertEqual(waitResult, .success)
             let loadedContent = try String(contentsOf: fileURL, encoding: .utf8)
-            let loadedContentArray = loadedContent.split(separator: "\n").map { String($0) }
+            let loadedContentArray = loadedContent.split(separator: "\n").map { String($0) + "\n" }
             XCTAssertEqual(Set(loadedContentArray), Set(contents))
         }
     }
@@ -64,8 +69,8 @@ final class FileLoggerStream_tests: XCTestCase {
     func test_ChangeFile_MaxSizeReached_CreatesNextFile() throws {
         try handleFile { fileURL in
             let count = 200
-            let contents: [String] = (0..<count).map { "this is a test line \($0)" }
-            let contentsString = contents.joined(separator: "\n") + "\n"
+            let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
+            let contentsString = contents.joined()
             let contentsSize = contentsString.utf8.count
             try contentsString.write(to: fileURL, atomically: true, encoding: .utf8)
             let nextURL = fileURL.appendingPathExtension("1")
@@ -84,8 +89,8 @@ final class FileLoggerStream_tests: XCTestCase {
     func test_ChangeFile_MaxSizeReached_WritesToNextFile() throws {
         try handleFile { fileURL in
             let count = 200
-            let contents: [String] = (0..<count).map { "this is a test line \($0)" }
-            let contentsString = contents.joined(separator: "\n") + "\n"
+            let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
+            let contentsString = contents.joined()
             let contentsSize = contentsString.utf8.count
             let nextURL = fileURL.appendingPathExtension("1")
             try contentsString.write(to: fileURL, atomically: true, encoding: .utf8)
@@ -94,7 +99,7 @@ final class FileLoggerStream_tests: XCTestCase {
             var exists = fileManager.fileExists(atPath: nextURL.path)
             XCTAssertFalse(exists)
 
-            let newContent = "That's a new content"
+            let newContent = "That's a new content\n"
 
             let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
             loggerStream.write(newContent)
@@ -103,7 +108,7 @@ final class FileLoggerStream_tests: XCTestCase {
             XCTAssertTrue(exists)
 
             let loadedContent = try String(contentsOf: fileURL, encoding: .utf8)
-            XCTAssertEqual(loadedContent, newContent + "\n")
+            XCTAssertEqual(loadedContent, newContent)
         }
     }
 
@@ -112,18 +117,18 @@ final class FileLoggerStream_tests: XCTestCase {
             let range1 = 0..<100
             let range2 = 100..<200
             let range3 = 200..<300
-            let contents1: [String] = range1.map { "this is a test line \($0)" }
-            let contents2: [String] = range2.map { "this is a test line \($0)" }
-            let contents3: [String] = range3.map { "this is a test line \($0)" }
+            let contents1: [String] = range1.map { "this is a test line \($0)\n" }
+            let contents2: [String] = range2.map { "this is a test line \($0)\n" }
+            let contents3: [String] = range3.map { "this is a test line \($0)\n" }
             let nextURL1 = fileURL.appendingPathExtension("1")
             let nextURL2 = fileURL.appendingPathExtension("2")
 
-            try (contents1.joined(separator: "\n") + "\n").write(to: fileURL, atomically: true, encoding: .utf8)
-            try (contents2.joined(separator: "\n") + "\n").write(to: nextURL1, atomically: true, encoding: .utf8)
-            try (contents3.joined(separator: "\n") + "\n").write(to: nextURL2, atomically: true, encoding: .utf8)
+            try contents1.joined().write(to: fileURL, atomically: true, encoding: .utf8)
+            try contents2.joined().write(to: nextURL1, atomically: true, encoding: .utf8)
+            try contents3.joined().write(to: nextURL2, atomically: true, encoding: .utf8)
 
-            let contentsSize = (contents1.joined(separator: "\n") + "\n").utf8.count
-            let newContent = "That's a new content"
+            let contentsSize = contents1.joined().utf8.count
+            let newContent = "That's a new content\n"
 
             let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 2))
             loggerStream.write(newContent)
@@ -131,15 +136,15 @@ final class FileLoggerStream_tests: XCTestCase {
             XCTAssertTrue(fileManager.fileExists(atPath: nextURL2.path))
 
             let loadedContent = try String(contentsOf: fileURL, encoding: .utf8)
-            XCTAssertEqual(loadedContent, newContent + "\n")
+            XCTAssertEqual(loadedContent, newContent)
         }
     }
 
     func test_ConcurrentWrite_Rotation_WrittenFullContent() throws {
         try handleFile { fileURL in
             let count = 500
-            let contents: [String] = (0..<count).map { "this is a test line \($0)" }
-            let contentsString = contents.joined(separator: "\n") + "\n"
+            let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
+            let contentsString = contents.joined()
             let contentsSize = Double(contentsString.utf8.count)
             let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: 0.7 * contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
 
@@ -150,20 +155,8 @@ final class FileLoggerStream_tests: XCTestCase {
             let loadedContent1 = try String(contentsOf: fileURL, encoding: .utf8)
             let nextFile = fileURL.appendingPathExtension("1")
             let loadedContent2 = try String(contentsOf: nextFile, encoding: .utf8)
-            let loadedContentArray = (loadedContent1 + loadedContent2).split(separator: "\n").map { String($0) }
+            let loadedContentArray = (loadedContent1 + loadedContent2).split(separator: "\n").map { String($0) + "\n" }
             XCTAssertEqual(Set(loadedContentArray), Set(contents))
-        }
-    }
-
-    func test_Write_AppendsNewLine() throws {
-        try handleFile { fileURL in
-            let content = "This is a content"
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager)
-
-            loggerStream.write(content)
-            let loadedContent = try String(contentsOf: fileURL, encoding: .utf8)
-
-            XCTAssertEqual(loadedContent, content + "\n")
         }
     }
 }

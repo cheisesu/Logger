@@ -5,9 +5,9 @@ extension LogTypeStringConvertible where Self == DefaultLogTypeStringConverter {
 }
 
 /// Default implementation of converting provided types of log messages to a string
-open class DefaultLogTypeStringConverter: LogTypeStringConvertible {
+public struct DefaultLogTypeStringConverter: LogTypeStringConvertible {
     /// Indicates options for converting
-    public struct Option: OptionSet {
+    public struct Option: OptionSet, Sendable {
         public let rawValue: UInt32
 
         public init(rawValue: UInt32) {
@@ -37,7 +37,7 @@ open class DefaultLogTypeStringConverter: LogTypeStringConvertible {
     /// It converts passed type using provided options such order: `<name> <circle>`
     /// - Parameter type: Type of log message. See <doc:LogType>
     /// - Returns: Converted string, based on options or nil.
-    open func string(for type: LogType) -> String? {
+    public func string(for type: LogType) -> String? {
         let components = [name(for: type), circle(for: type)].compactMap { $0 }
         guard !components.isEmpty else { return nil }
         let result = components.joined(separator: " ")
@@ -47,7 +47,7 @@ open class DefaultLogTypeStringConverter: LogTypeStringConvertible {
     /// Provides circle for passed log message type
     /// - Parameter type: Type of log message. See <doc:LogType>
     /// - Returns: Converted circle string or nil if <doc:Option/useCircle> not set
-    open func circle(for type: LogType) -> String? {
+    public func circle(for type: LogType) -> String? {
         guard options.contains(.useCircle) else { return nil }
 
         switch type {
@@ -63,7 +63,7 @@ open class DefaultLogTypeStringConverter: LogTypeStringConvertible {
     /// Provides string representation for passed log message type
     /// - Parameter type: Type of log message. See <doc:LogType>
     /// - Returns: Converted string or nil if <doc:Option/useName> not set
-    open func name(for type: LogType) -> String? {
+    public func name(for type: LogType) -> String? {
         guard options.contains(.useName) else { return nil }
 
         switch type {

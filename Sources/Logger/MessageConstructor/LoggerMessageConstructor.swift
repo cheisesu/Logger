@@ -1,7 +1,7 @@
 import Foundation
 
 /// Provides methods to construct final log messages based on arguments
-public protocol LoggerMessageConstructor {
+public protocol LoggerMessageConstructor: Sendable {
     /// Constructs final message from passed parameters.
     ///
     /// - Parameters:

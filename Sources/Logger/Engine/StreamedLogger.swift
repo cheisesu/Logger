@@ -1,6 +1,6 @@
 import Foundation
 
-public class StreamedLogger: LoggerEngine {
+public final class StreamedLogger: LoggerEngine, @unchecked Sendable {
     private let defaultCategory: LoggerCategory
     private let messageConstructor: LoggerMessageConstructor
     private var stream: LoggerStream
@@ -15,9 +15,5 @@ public class StreamedLogger: LoggerEngine {
                       _ file: String = #fileID, _ line: Int = #line) {
         let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
         stream.write(message + "\n")
-    }
-
-    public func flush() {
-        stream.flush()
     }
 }

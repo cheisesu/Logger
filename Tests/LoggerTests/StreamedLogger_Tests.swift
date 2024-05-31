@@ -39,15 +39,4 @@ final class StreamedLogger_Tests: XCTestCase {
         XCTAssertTrue(stream.writeCalled)
         XCTAssertEqual(stream.writeMessage, constructedMessage)
     }
-
-    func test_Flush_CallesStreamFlush() {
-        let stream = _MockedLoggerStream()
-        let messageContructor: LoggerMessageConstructor = .default
-        let category: LoggerCategory = "default"
-        let logger = StreamedLogger(defaultCategory: category, messageConstructor: messageContructor, stream: stream)
-
-        logger.flush()
-
-        XCTAssertTrue(stream.flushCalled)
-    }
 }

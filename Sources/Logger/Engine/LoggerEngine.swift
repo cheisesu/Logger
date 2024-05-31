@@ -1,7 +1,7 @@
 import Foundation
 
 /// Describes what a logger have to do
-public protocol LoggerEngine {
+public protocol LoggerEngine: Sendable {
 
     /// Writes a message to a logger source
     /// - Parameters:
@@ -11,9 +11,6 @@ public protocol LoggerEngine {
     ///   - file: File, where the method is called
     ///   - line: Line in the file
     func write(_ message: String, of category: LoggerCategory?, as logType: LogType, _ file: String, _ line: Int)
-
-    /// Saves pending messages
-    func flush()
 }
 
 extension LoggerEngine {

@@ -4,7 +4,7 @@ import os
 /// Logger engine of system console.
 ///
 /// This engine writes messages to the system log, that you can see in Console.app.
-public class ConsoleLogger: LoggerEngine {
+public final class ConsoleLogger: LoggerEngine, @unchecked Sendable {
     private let osLogsLock: NSLock
     private var osLogs: [String: OSLog]
     private let defaultCategory: LoggerCategory
@@ -36,11 +36,6 @@ public class ConsoleLogger: LoggerEngine {
         guard let osLog = osLog(for: category) else { return }
         let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
         os_log("%{public}@", log: osLog, type: logType.osLogType, message)
-    }
-
-    public func flush() {
-        osLogsLock.lock()
-        osLogsLock.unlock()
     }
 }
 

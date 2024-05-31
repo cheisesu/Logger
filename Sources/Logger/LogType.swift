@@ -2,8 +2,8 @@ import Foundation
 import os
 
 /// The various log levels that the unified logging system provides
-public struct LogType: RawRepresentable, Equatable {
-    public var rawValue: UInt8
+public struct LogType: RawRepresentable, Equatable, Sendable {
+    public let rawValue: UInt8
 
     public init(rawValue: UInt8) {
         self.rawValue = rawValue
