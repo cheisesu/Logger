@@ -1,5 +1,5 @@
 /// Provides a way to convert log type into a string
-public protocol LogTypeStringConvertible {
+public protocol LogTypeStringConvertible: Sendable {
     /// Converts passed log type to a string value
     ///
     /// - Parameter type: Type of a log message

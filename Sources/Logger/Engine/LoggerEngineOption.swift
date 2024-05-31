@@ -1,7 +1,7 @@
 import Foundation
 
 /// Options that may be used in a logger engine
-public struct LoggerEngineOption: OptionSet {
+public struct LoggerEngineOption: OptionSet, Sendable {
     public var rawValue: UInt32
 
     public init(rawValue: UInt32) {

@@ -1,8 +1,7 @@
 import Foundation
 @testable import Logger
 
-final class _MockedLoggerEngine: LoggerEngine {
-    var flushCalled: Bool = false
+final class _MockedLoggerEngine: LoggerEngine, @unchecked Sendable {
     var writeCalled: Bool = false
     var writeMessage: String?
     var writeCategory: LoggerCategory?
@@ -17,9 +16,5 @@ final class _MockedLoggerEngine: LoggerEngine {
         writeLogType = logType
         writeFile = file
         writeLine = line
-    }
-
-    func flush() {
-        flushCalled = true
     }
 }

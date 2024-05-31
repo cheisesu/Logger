@@ -1,20 +1,24 @@
 import Foundation
 
-public protocol FileLimitsPolitics {
+public protocol FileLimitsPolitics: Sendable {
     var maxSize: Measurement<UnitInformationStorage> { get }
 }
 
-public final class CountingFileRotationURLPolitics: FileURLRotationPolitics {
+public final class CountingFileRotationURLPolitics: FileURLRotationPolitics, @unchecked Sendable {
+    private let fileManagerLock: NSLock
     private let fileManager: FileManager
     private let maxNumber: Int
 
     public init(fileManager: FileManager = .default, maxNumber: Int) {
+        fileManagerLock = NSLock()
         self.fileManager = fileManager
         self.maxNumber = maxNumber
     }
 
     public func nextFileURL(for source: URL) -> URL {
         guard maxNumber > 0 else { return source }
+        fileManagerLock.lock()
+        defer { fileManagerLock.unlock() }
         guard let nextNumber = nextNumber(for: source) else { return source }
         let newURL = source.appendingPathExtension("\(nextNumber)")
         return newURL
