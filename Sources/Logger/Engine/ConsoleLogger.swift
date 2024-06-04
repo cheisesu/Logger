@@ -29,12 +29,15 @@ public final class ConsoleLogger: LoggerEngine, @unchecked Sendable {
         self.messageConstructor = messageConstructor
     }
 
-    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType = .default,
-                      _ file: String = #fileID, _ line: Int = #line) {
+    public func write(_ items: Any..., category: (any LoggerCategory)?, logType: LogType,
+                      separator: String, terminator: String, file: String, line: Int)
+    {
         osLogsLock.lock()
         defer { osLogsLock.unlock() }
-        guard let osLog = osLog(for: category) else { return }
-        let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
+        let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
+                                                     separator: separator, terminator: terminator, file: file, line: line)
+        guard let message else { return }
+        let osLog = osLog(for: category)
         os_log("%{public}@", log: osLog, type: logType.osLogType, message)
     }
 }
@@ -42,10 +45,7 @@ public final class ConsoleLogger: LoggerEngine, @unchecked Sendable {
 // MARK: - PRIVATE METHODS
 
 extension ConsoleLogger {
-    private func osLog(for group: LoggerCategory?) -> OSLog? {
-        osLogsLock.lock()
-        defer { osLogsLock.unlock() }
-
+    private func osLog(for group: LoggerCategory?) -> OSLog {
         let group = group ?? defaultCategory
         if let log = osLogs[group.rawLoggerCategory] {
             return log
@@ -58,4 +58,18 @@ extension ConsoleLogger {
 
 private extension LogType {
     var osLogType: OSLogType { OSLogType(rawValue) }
+}
+
+// MARK: - DEPRECATIONS
+
+extension ConsoleLogger {
+    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
+    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType = .default,
+                      _ file: String = #fileID, _ line: Int = #line) {
+        osLogsLock.lock()
+        defer { osLogsLock.unlock() }
+        let osLog = osLog(for: category)
+        let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
+        os_log("%{public}@", log: osLog, type: logType.osLogType, message)
+    }
 }
