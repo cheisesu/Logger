@@ -9,6 +9,7 @@ final class _MockedLoggerEngine: LoggerEngine, @unchecked Sendable {
     var writeFile: String?
     var writeLine: Int?
 
+    @available(*, deprecated)
     func write(_ message: String, of category: LoggerCategory?, as logType: LogType, _ file: String, _ line: Int) {
         writeCalled = true
         writeMessage = message

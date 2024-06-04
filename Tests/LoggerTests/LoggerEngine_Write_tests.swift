@@ -5,7 +5,12 @@ final class LoggerEngine_Write_tests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
     }
+}
 
+// MARK: - DEPRECATIONS
+
+extension LoggerEngine_Write_tests {
+    @available(*, deprecated)
     func test_ExtendedWrite_PassingLogType_CallesSourceWriteWithCorrectArguments() {
         let engine = _MockedLoggerEngine()
         let file = #fileID
@@ -20,6 +25,7 @@ final class LoggerEngine_Write_tests: XCTestCase {
         XCTAssertEqual(engine.writeLine, line)
     }
 
+    @available(*, deprecated)
     func test_ExtendedWrite_DefaultLogType_CallesSourceWriteWithCorrectArguments() {
         let engine = _MockedLoggerEngine()
         let file = #fileID

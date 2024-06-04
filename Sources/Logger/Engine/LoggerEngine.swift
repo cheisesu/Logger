@@ -35,9 +35,9 @@ extension LoggerEngine {
     ///   - terminator: The string to print after all items have been printed. The default is a newline (`"\n"`).
     ///   - file: File, where the method is called. The default value is `#fileID`.
     ///   - line: Line in the file. The default value is a number of line of the call (`#line`).
-    func write(_ items: Any..., category: LoggerCategory? = nil, logType: LogType,
-               separator: String = " ", terminator: String = "\n",
-               file: String = #fileID, line: Int = #line)
+    public func write(_ items: Any..., category: LoggerCategory? = nil, logType: LogType,
+                      separator: String = " ", terminator: String = "\n",
+                      file: String = #fileID, line: Int = #line)
     {
         write(items, category: category, logType: logType, separator: separator, terminator: terminator, file: file, line: line)
     }
