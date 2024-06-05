@@ -24,16 +24,3 @@ public final class StreamedLogger: LoggerEngine, @unchecked Sendable {
         stream.write(message)
     }
 }
-
-// MARK: - DEPRECATIONS
-
-extension StreamedLogger {
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType = .default,
-                      _ file: String = #fileID, _ line: Int = #line) {
-        let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
-        streamLock.lock()
-        defer { streamLock.unlock() }
-        stream.write(message + "\n")
-    }
-}

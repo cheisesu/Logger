@@ -3,16 +3,6 @@ import Foundation
 /// Describes what a logger have to do
 public protocol LoggerEngine: Sendable {
 
-    /// Writes a message to a logger source
-    /// - Parameters:
-    ///   - message: Log initial message
-    ///   - category: Category of the message to indicate the message in a system
-    ///   - logType: Type of the message
-    ///   - file: File, where the method is called
-    ///   - line: Line in the file
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    func write(_ message: String, of category: LoggerCategory?, as logType: LogType, _ file: String, _ line: Int)
-
     /// Writes the textual representations of the given items into the source engine.
     /// - Parameters:
     ///   - items: Zero or more items to write.
@@ -40,34 +30,5 @@ extension LoggerEngine {
                       file: String = #fileID, line: Int = #line)
     {
         write(items, category: category, logType: logType, separator: separator, terminator: terminator, file: file, line: line)
-    }
-}
-
-// MARK: - DEPRECATIONS
-
-extension LoggerEngine {
-    /// Writes a message to a logger source
-    /// - Parameters:
-    ///   - message: Log initial message
-    ///   - category: Category of the message to indicate the message in a system
-    ///   - logType: Type of the message
-    ///   - file: File, where the method is called
-    ///   - line: Line in the file
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType,
-                      _ file: String = #fileID, _ line: Int = #line) {
-        write(message, of: category, as: logType, file, line)
-    }
-
-    /// Writes a message to a logger source with default log type
-    /// - Parameters:
-    ///   - message: Log initial message
-    ///   - category: Category of the message to indicate the message in a system
-    ///   - file: File, where the method is called
-    ///   - line: Line in the file
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    public func write(_ message: String, of category: LoggerCategory? = nil,
-                      _ file: String = #fileID, _ line: Int = #line) {
-        write(message, of: category, as: .default, file, line)
     }
 }

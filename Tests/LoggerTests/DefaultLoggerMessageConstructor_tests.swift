@@ -2,8 +2,6 @@ import XCTest
 @testable import Logger
 
 final class DefaultLoggerMessageConstructor_tests: XCTestCase {
-    @available(*, deprecated)
-    private let sourceMessage = "source message"
     private let sourceMessage1 = "source"
     private let sourceMessage2 = "message"
     private var fullSourceMessage: String {
@@ -130,101 +128,5 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
         XCTAssertEqual(message, "\(logTypeString) \(fullSourceMessage)\n\(file):\(line)\(terminator)")
-    }
-}
-
-// MARK: - DEPRECATIONS
-
-extension DefaultLoggerMessageConstructor_tests {
-    @available(*, deprecated)
-    func test_MakeMessage_EmptyOptions_ResultsOnlyLogTypeAndSourceMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "\(logTypeString) \(sourceMessage)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintCategoryOption_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printCategory], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "[\(category)] \(logTypeString) \(sourceMessage)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintFileOption_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printFile], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "\(logTypeString) \(sourceMessage)\n\(file)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintLineOption_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printLine], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "\(logTypeString) \(sourceMessage)\n\(line)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintCategoryAndFileOptions_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printFile], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "[\(category)] \(logTypeString) \(sourceMessage)\n\(file)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintCategoryAndLineOptions_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printLine], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "[\(category)] \(logTypeString) \(sourceMessage)\n\(line)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintFileAndLineOptions_ResultsCorrectMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printFile, .printLine], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "\(logTypeString) \(sourceMessage)\n\(file):\(line)")
-    }
-
-    @available(*, deprecated)
-    func test_MakeMessage_PrintCategoryFileAndLineOptions_ResultsFullMessage() {
-        let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printLine, .printFile], logTypeStringConverter: logTypeStringConverter)
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "[\(category)] \(logTypeString) \(sourceMessage)\n\(file):\(line)")
-    }
-
-    // MARK: - EXTENSIONS
-
-    @available(*, deprecated)
-    func test_DefaultLogger_MakeMessage_ResultsFullMessage() {
-        let constructor: LoggerMessageConstructor = .default
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "[\(category)] \(logTypeString) \(sourceMessage)\n\(file):\(line)")
-    }
-
-    @available(*, deprecated)
-    func test_ConsoleLogger_MakeMessage_ResultsMessageWithoutCategory() {
-        let constructor: LoggerMessageConstructor = .console
-
-        let message = constructor.makeMessage(from: sourceMessage, of: category, as: logType, file, line)
-
-        XCTAssertEqual(message, "\(logTypeString) \(sourceMessage)\n\(file):\(line)")
     }
 }

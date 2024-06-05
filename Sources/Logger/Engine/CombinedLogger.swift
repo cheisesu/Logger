@@ -23,15 +23,3 @@ public final class CombinedLogger: LoggerEngine, Sendable {
         }
     }
 }
-
-// MARK: - DEPRECATIONS
-
-extension CombinedLogger {
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    public func write(_ message: String, of category: LoggerCategory?, as logType: LogType,
-                      _ file: String, _ line: Int) {
-        engines.forEach { engine in
-            engine.write(message, of: category, as: logType, file, line)
-        }
-    }
-}

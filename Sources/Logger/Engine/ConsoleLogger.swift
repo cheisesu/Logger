@@ -59,17 +59,3 @@ extension ConsoleLogger {
 private extension LogType {
     var osLogType: OSLogType { OSLogType(rawValue) }
 }
-
-// MARK: - DEPRECATIONS
-
-extension ConsoleLogger {
-    @available(*, deprecated, renamed: "write(_:category:logType:separator:terminator:file:line:)")
-    public func write(_ message: String, of category: LoggerCategory? = nil, as logType: LogType = .default,
-                      _ file: String = #fileID, _ line: Int = #line) {
-        osLogsLock.lock()
-        defer { osLogsLock.unlock() }
-        let osLog = osLog(for: category)
-        let message = messageConstructor.makeMessage(from: message, of: category ?? defaultCategory, as: logType, file, line)
-        os_log("%{public}@", log: osLog, type: logType.osLogType, message)
-    }
-}
