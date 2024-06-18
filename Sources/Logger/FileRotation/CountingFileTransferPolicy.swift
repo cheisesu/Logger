@@ -11,19 +11,15 @@ public class CountingFileTransferPolicy: @unchecked Sendable, FileTransferPolicy
         case unacceptedURL
     }
 
-    private let fileManagerLock: NSLock
     private let fileManager: FileManager
     private let maxCount: Int
 
     public init(fileManager: FileManager = .default, maxCount: Int) {
-        fileManagerLock = NSLock()
         self.fileManager = fileManager
         self.maxCount = max(maxCount, 1)
     }
 
     public func perform(for sourceURL: URL, recreateSource: Bool) throws {
-        fileManagerLock.lock()
-        defer { fileManagerLock.unlock() }
         try checkURLCorrectness(sourceURL)
         try moveNextFiles(for: sourceURL)
         if recreateSource {
