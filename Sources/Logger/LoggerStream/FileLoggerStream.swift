@@ -1,5 +1,7 @@
 import Foundation
 
+//#error("Loogs like it doesnt work properly with replacing files")
+
 public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     private let sourceURL: URL
     private let fileHandleLock: NSLock

@@ -21,6 +21,7 @@ public final class CountingFileRotationURLPolitics: FileURLRotationPolitics, @un
         defer { fileManagerLock.unlock() }
         guard let nextNumber = nextNumber(for: source) else { return source }
         let newURL = source.appendingPathExtension("\(nextNumber)")
+        print("next url", newURL)
         return newURL
     }
 

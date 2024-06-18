@@ -1,6 +1,68 @@
+import Testing
 import XCTest
 @testable import Logger
 
+struct CountingFileRotationURLPoliticsTests {
+    private let fileManager = FileManager.default
+
+    private func handleFolder(_ folderName: String = #function, handler: (_ tempDir: URL) throws -> Void) throws {
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(folderName, isDirectory: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try handler(tempDir)
+        try fileManager.removeItem(at: tempDir)
+    }
+
+    @Test(
+        "When there're no files, next file url must return the same as the source one",
+        .tags(.fileRotation)
+    )
+    func sourceFileNotExists_ReturnsSourceURL() async throws {
+        let fileName = "file._tf"
+        let politics: FileURLRotationPolitics = .counting(maxNumber: 1)
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function, isDirectory: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try! fileManager.removeItem(at: tempDir) }
+        let sourceURL = tempDir.appendingPathComponent(fileName)
+        let nextURL = sourceURL
+        let result = politics.nextFileURL(for: sourceURL)
+        try #require(result == nextURL)
+    }
+
+    @Test(
+        "When there's source file, and max rotation count is zero, next file url must return the same file url",
+        .tags(.fileRotation)
+    )
+    func sourceFileExistsAndMaxNumberIsZero_ReturnsSameURL() async throws {
+        let fileName = "file._tf"
+        let politics: FileURLRotationPolitics = .counting(maxNumber: 0)
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function, isDirectory: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try! fileManager.removeItem(at: tempDir) }
+        let sourceURL = tempDir.appendingPathComponent(fileName)
+        let nextURL = sourceURL
+        let result = politics.nextFileURL(for: sourceURL)
+        try #require(result == nextURL)
+    }
+
+    @Test(
+        "When there's source file, and max rotation count is one, next file url must return the same file url appending `.1`",
+        .tags(.fileRotation)
+    )
+    func sourceFileExistsAndMaxNumberIsOne_ReturnsURLWithNumberOne() async throws {
+        let fileName = "file._tf"
+        let politics: FileURLRotationPolitics = .counting(maxNumber: 1)
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function, isDirectory: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try! fileManager.removeItem(at: tempDir) }
+        let sourceURL = tempDir.appendingPathComponent(fileName)
+        let nextURL = sourceURL.appendingPathExtension("1")
+        try Data().write(to: sourceURL)
+        let result = politics.nextFileURL(for: sourceURL)
+        try #require(result == nextURL)
+    }
+}
+
+@available(*, deprecated)
 final class CountingFileRotationURLPolitics_tests: XCTestCase {
     private let fileManager = FileManager.default
 
@@ -13,34 +75,6 @@ final class CountingFileRotationURLPolitics_tests: XCTestCase {
         try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
         try handler(tempDir)
         try fileManager.removeItem(at: tempDir)
-    }
-
-    func test_NextFileURL_NoFiles_ReturnsSourceURL() throws {
-        let fileName = "file._tf"
-        let politics: FileURLRotationPolitics = .counting(maxNumber: 1)
-
-        try handleFolder { tempDir in
-            let sourceURL = tempDir.appendingPathComponent(fileName, isDirectory: false)
-
-            let nextURL = politics.nextFileURL(for: sourceURL)
-
-            XCTAssertEqual(nextURL, sourceURL)
-        }
-    }
-
-    func test_NextFileURL_SourceExists_ReturnsSourceURLWithNumberOne() throws {
-        let fileName = "file._tf"
-        let politics: FileURLRotationPolitics = .counting(maxNumber: 1)
-
-        try handleFolder { tempDir in
-            let sourceURL = tempDir.appendingPathComponent(fileName, isDirectory: false)
-            try Data().write(to: sourceURL)
-            let nextURL = tempDir.appendingPathComponent("\(fileName).1", isDirectory: false)
-
-            let result = politics.nextFileURL(for: sourceURL)
-
-            XCTAssertEqual(result, nextURL)
-        }
     }
 
     func test_NextFileURL_OneExists_MaxTwo_ReturnsSourceURLWithNumberTwo() throws {
