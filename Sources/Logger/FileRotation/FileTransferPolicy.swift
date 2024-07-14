@@ -1,5 +1,9 @@
 import Foundation
 
+public protocol FileLimitsPolitics: Sendable {
+    var maxSize: Measurement<UnitInformationStorage> { get }
+}
+
 public protocol FileTransferPolicy: Sendable {
     func perform(for sourceURL: URL, recreateSource: Bool) throws
 }

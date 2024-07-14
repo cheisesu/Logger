@@ -79,7 +79,7 @@ final class FileLoggerStream_tests: XCTestCase {
             var exists = fileManager.fileExists(atPath: nextURL.path)
             XCTAssertFalse(exists)
 
-            _ = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            _ = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 2))
 
             exists = fileManager.fileExists(atPath: nextURL.path)
             XCTAssertTrue(exists)
@@ -101,7 +101,7 @@ final class FileLoggerStream_tests: XCTestCase {
 
             let newContent = "That's a new content\n"
 
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 2))
             loggerStream.write(newContent)
 
             exists = fileManager.fileExists(atPath: nextURL.path)
@@ -130,7 +130,7 @@ final class FileLoggerStream_tests: XCTestCase {
             let contentsSize = contents1.joined().utf8.count
             let newContent = "That's a new content\n"
 
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 2))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 3))
             loggerStream.write(newContent)
 
             XCTAssertTrue(fileManager.fileExists(atPath: nextURL2.path))
@@ -146,7 +146,7 @@ final class FileLoggerStream_tests: XCTestCase {
             let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
             let contentsString = contents.joined()
             let contentsSize = Double(contentsString.utf8.count)
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: 0.7 * contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: 0.7 * contentsSize, fileTransferPolicy: .counting(maxCount: 2))
 
             DispatchQueue.concurrentPerform(iterations: count) { index in
                 let line = contents[index]

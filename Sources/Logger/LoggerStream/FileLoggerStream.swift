@@ -8,16 +8,16 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     private var fileHandle: FileHandle
     private let fileManager: FileManager
     private let fileLimits: FileLimitsPolitics
-    private let rotationURLPolitics: FileURLRotationPolitics?
+    private let fileTransferPolicy: FileTransferPolicy?
     private let currentSizeLock: NSLock
     private var currentSize: Measurement<UnitInformationStorage>
 
     public init(_ sourceURL: URL, fileManager: FileManager = .default,
-                fileLimits: FileLimitsPolitics = 0, rotationURLPolitics: FileURLRotationPolitics? = nil) throws {
+                fileLimits: FileLimitsPolitics = 0, fileTransferPolicy: FileTransferPolicy? = nil) throws {
         self.sourceURL = sourceURL
         self.fileManager = fileManager
         self.fileLimits = fileLimits
-        self.rotationURLPolitics = rotationURLPolitics
+        self.fileTransferPolicy = fileTransferPolicy
         fileHandleLock = NSLock()
         currentSizeLock = NSLock()
 
@@ -49,37 +49,33 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
         defer { fileHandleLock.unlock() }
         do {
             let data = Data(string.utf8)
-            let size = Measurement(value: Double(data.count), unit: UnitInformationStorage.bytes)
             if #available(tvOS 13.4, macOS 10.15.4, iOS 13.4, *) {
                 try fileHandle.write(contentsOf: data)
             } else {
                 fileHandle.write(data)
             }
-            currentSizeLock.lock()
-            defer { currentSizeLock.unlock() }
-            currentSize = currentSize + size
-            if currentSize >= fileLimits.maxSize {
-                changeFile()
-            }
+            let size = Measurement(value: Double(data.count), unit: UnitInformationStorage.bytes)
+            handleWriteSize(size)
         } catch {
+        }
+    }
+
+    private func handleWriteSize(_ size: Measurement<UnitInformationStorage>) {
+        currentSizeLock.lock()
+        defer { currentSizeLock.unlock() }
+        currentSize = currentSize + size
+        if currentSize >= fileLimits.maxSize {
+            changeFile()
         }
     }
 
     /// - warning: this method should be used under `fileHandle` lock and `currentSize `lock.
     private func changeFile() {
+        guard let fileTransferPolicy else { return }
         do {
-            guard let rotationURLPolitics else { return }
-            let newURL = rotationURLPolitics.nextFileURL(for: sourceURL)
-            //close current file
             try fileHandle.synchronize()
             try fileHandle.close()
-            // rename current file to new url
-            if fileManager.fileExists(atPath: newURL.path) {
-                try fileManager.removeItem(at: newURL)
-            }
-            try fileManager.moveItem(at: sourceURL, to: newURL)
-            // create new file at source url
-            try Data().write(to: sourceURL)
+            try fileTransferPolicy.perform(for: sourceURL, recreateSource: true)
             fileHandle = try FileHandle(forUpdating: sourceURL)
             currentSize = Measurement(value: 0, unit: .bytes)
         } catch {
