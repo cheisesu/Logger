@@ -1,7 +1,7 @@
 import Foundation
 
-extension FileTransferPolicy {
-    public static func counting(maxCount: Int) -> any FileTransferPolicy {
+extension FileTransferPolicy where Self == CountingFileTransferPolicy {
+    public static func counting(maxCount: Int) -> FileTransferPolicy {
         CountingFileTransferPolicy(maxCount: maxCount)
     }
 }
@@ -20,6 +20,7 @@ public class CountingFileTransferPolicy: @unchecked Sendable, FileTransferPolicy
     }
 
     public func perform(for sourceURL: URL, recreateSource: Bool) throws {
+        let sourceURL = sourceURL.resolvingSymlinksInPath()
         try checkURLCorrectness(sourceURL)
         try moveNextFiles(for: sourceURL)
         if recreateSource {
@@ -36,26 +37,22 @@ public class CountingFileTransferPolicy: @unchecked Sendable, FileTransferPolicy
     private func moveNextFiles(for sourceURL: URL) throws {
         let sourceDir = sourceURL.deletingLastPathComponent()
         let urls = try fileManager.contentsOfDirectory(at: sourceDir, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
-            .filter { $0.path.starts(with: sourceURL.pathExtension) }
-        let mapping: [URL: URL] = urls.reduce([:]) { partialResult, url in
-            var partialResult = partialResult
-            if var number = UInt64(url.pathExtension) {
-                number += 1
-                partialResult[url] = url.appendingPathExtension("\(number)")
+            .map { $0.resolvingSymlinksInPath() }
+            .filter { $0.path.starts(with: sourceURL.path) }
+        let sortedURLs = urls.sorted { $0.path > $1.path }
+        for url in sortedURLs {
+            var number = UInt64(url.pathExtension) ?? 0
+            let hasNumericExt = number > 0
+            number += 1
+            if number >= maxCount {
+                try fileManager.removeItem(at: url)
+            } else if hasNumericExt {
+                let newURL = url.deletingPathExtension().appendingPathExtension("\(number)")
+                try fileManager.moveItem(at: url, to: newURL)
             } else {
-                partialResult[url] = url.appendingPathExtension("1")
+                let newURL = url.appendingPathExtension("\(number)")
+                try fileManager.moveItem(at: url, to: newURL)
             }
-            return partialResult
-        }
-        let sortedKeys = mapping.keys.sorted { $0.path > $1.path }
-        let keysToDelete = sortedKeys.dropLast(maxCount)
-        let keysToMove = sortedKeys.suffix(maxCount)
-        for key in keysToDelete {
-            try fileManager.removeItem(at: key)
-        }
-        for key in keysToMove {
-            guard let value = mapping[key] else { continue }
-            try fileManager.moveItem(at: key, to: value)
         }
     }
 
