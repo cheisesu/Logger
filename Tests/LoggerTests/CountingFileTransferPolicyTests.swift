@@ -145,4 +145,25 @@ struct CountingFileTransferPolicyTests {
         try #require(String(contentsOf: thirdURL, encoding: .utf8) == secondText)
         try #require(!fileManager.fileExists(atPath: fourthURL.path))
     }
+
+    // MARK: - DEFAULT PERFORM CALL
+
+    @Test
+    func defaultCreateFileParamCallsOriginWithFalse() throws {
+        final class _Mock: FileTransferPolicy {
+            var performCalled = false
+            var recreateSourceValue: Bool?
+
+            func perform(for sourceURL: URL, recreateSource: Bool) throws {
+                performCalled = true
+                recreateSourceValue = recreateSource
+            }
+        }
+        let mock = _Mock()
+        let policy: FileTransferPolicy = mock
+        try policy.perform(for: URL(fileURLWithPath: ""))
+
+        try #require(mock.performCalled == true)
+        try #require(mock.recreateSourceValue == false)
+    }
 }
