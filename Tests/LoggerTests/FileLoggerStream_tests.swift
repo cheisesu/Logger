@@ -5,7 +5,7 @@ final class FileLoggerStream_tests: XCTestCase {
     private let fileManager = FileManager.default
 
     override func setUpWithError() throws {
-        continueAfterFailure = true
+        continueAfterFailure = false
     }
 
     private func handleFile(_ fileName: String = #function, handler: (_ fileURL: URL) throws -> Void) throws {
@@ -79,7 +79,7 @@ final class FileLoggerStream_tests: XCTestCase {
             var exists = fileManager.fileExists(atPath: nextURL.path)
             XCTAssertFalse(exists)
 
-            _ = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            _ = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 2))
 
             exists = fileManager.fileExists(atPath: nextURL.path)
             XCTAssertTrue(exists)
@@ -101,7 +101,7 @@ final class FileLoggerStream_tests: XCTestCase {
 
             let newContent = "That's a new content\n"
 
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 2))
             loggerStream.write(newContent)
 
             exists = fileManager.fileExists(atPath: nextURL.path)
@@ -130,7 +130,7 @@ final class FileLoggerStream_tests: XCTestCase {
             let contentsSize = contents1.joined().utf8.count
             let newContent = "That's a new content\n"
 
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, rotationURLPolitics: .counting(maxNumber: 2))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: contentsSize, fileTransferPolicy: .counting(maxCount: 3))
             loggerStream.write(newContent)
 
             XCTAssertTrue(fileManager.fileExists(atPath: nextURL2.path))
@@ -146,7 +146,7 @@ final class FileLoggerStream_tests: XCTestCase {
             let contents: [String] = (0..<count).map { "this is a test line \($0)\n" }
             let contentsString = contents.joined()
             let contentsSize = Double(contentsString.utf8.count)
-            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: 0.7 * contentsSize, rotationURLPolitics: .counting(maxNumber: 1))
+            let loggerStream = try FileLoggerStream(fileURL, fileManager: fileManager, fileLimits: 0.7 * contentsSize, fileTransferPolicy: .counting(maxCount: 2))
 
             DispatchQueue.concurrentPerform(iterations: count) { index in
                 let line = contents[index]
@@ -158,5 +158,39 @@ final class FileLoggerStream_tests: XCTestCase {
             let loadedContentArray = (loadedContent1 + loadedContent2).split(separator: "\n").map { String($0) + "\n" }
             XCTAssertEqual(Set(loadedContentArray), Set(contents))
         }
+    }
+
+    func test_100WritesSplitsCorrectlyOn5Files() throws {
+        let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function)
+        let fileManager = FileManager.default
+        try? fileManager.removeItem(at: tmpDir)
+        try? fileManager.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let constructor = DefaultLoggerMessageConstructor(options: .printCategory)
+        let consoleLogger: LoggerEngine = ConsoleLogger(defaultCategory: "EXAMPLE", messageConstructor: constructor)
+        let fileURL = tmpDir.appending(path: "file.txt")
+        let fileStream = try FileLoggerStream(fileURL, fileLimits: 3 * 1024, fileTransferPolicy: .counting(maxCount: 6))
+        let fileLogger: LoggerEngine = StreamedLogger(defaultCategory: "FILE_EXAMPLE", messageConstructor: constructor, stream: fileStream)
+        let logger: LoggerEngine = CombinedLogger(consoleLogger, fileLogger)
+
+        let group = DispatchGroup()
+        let count = 100
+        for _ in 0..<count {
+            group.enter()
+        }
+        DispatchQueue.concurrentPerform(iterations: count) { index in
+            let wait = UInt32.random(in: 1..<3)
+            logger.write("Step", index, ": logging after sleeping during", wait, "seconds",
+                         "on thread", Thread.current, logType: .default)
+            group.leave()
+        }
+        group.wait()
+
+        let urls = try fileManager.contentsOfDirectory(at: tmpDir, includingPropertiesForKeys: nil)
+            .map { $0.resolvingSymlinksInPath() }
+            .filter { $0.path.starts(with: tmpDir.path) }
+        XCTAssertEqual(urls.count, 5)
+        let contents = try (0..<5).flatMap { try String(contentsOf: urls[$0])
+            .split(separator: "\n") }.filter { !$0.isEmpty }
+        XCTAssertEqual(contents.count, count)
     }
 }

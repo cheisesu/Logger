@@ -3,7 +3,7 @@ import XCTest
 
 final class CombinedLogger_Tests: XCTestCase {
     override func setUpWithError() throws {
-        continueAfterFailure = true
+        continueAfterFailure = false
     }
 
     func test_CallsAllLoggersWrite_Variadic() {

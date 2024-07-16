@@ -3,7 +3,7 @@ import XCTest
 
 final class StreamedLogger_Tests: XCTestCase {
     override func setUpWithError() throws {
-        continueAfterFailure = true
+        continueAfterFailure = false
     }
 
     func test_CallsStreamWriteWithCorrectValue() {

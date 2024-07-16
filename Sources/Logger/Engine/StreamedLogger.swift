@@ -6,7 +6,9 @@ public final class StreamedLogger: LoggerEngine, @unchecked Sendable {
     private let streamLock: NSLock
     private var stream: LoggerStream
 
-    public init(defaultCategory: LoggerCategory, messageConstructor: LoggerMessageConstructor, stream: LoggerStream) {
+    public init(defaultCategory: LoggerCategory = "default",
+                messageConstructor: LoggerMessageConstructor = .default,
+                stream: LoggerStream) {
         self.defaultCategory = defaultCategory
         self.messageConstructor = messageConstructor
         streamLock = NSLock()
