@@ -19,7 +19,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
     private let terminator = "\n"
 
     override func setUpWithError() throws {
-        continueAfterFailure = true
+        continueAfterFailure = false
     }
 
     func test_EmptyItems_ReturnsNil() throws {

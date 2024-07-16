@@ -32,7 +32,9 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
             let data = fileHandle.readDataToEndOfFile()
             currentSize = Measurement(value: Double(data.count), unit: .bytes)
         }
-        changeFile()
+        if currentSize >= fileLimits.maxSize {
+            changeFile()
+        }
     }
 
     deinit {

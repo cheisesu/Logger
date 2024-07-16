@@ -5,7 +5,7 @@ final class FileLoggerStream_tests: XCTestCase {
     private let fileManager = FileManager.default
 
     override func setUpWithError() throws {
-        continueAfterFailure = true
+        continueAfterFailure = false
     }
 
     private func handleFile(_ fileName: String = #function, handler: (_ fileURL: URL) throws -> Void) throws {
@@ -158,5 +158,39 @@ final class FileLoggerStream_tests: XCTestCase {
             let loadedContentArray = (loadedContent1 + loadedContent2).split(separator: "\n").map { String($0) + "\n" }
             XCTAssertEqual(Set(loadedContentArray), Set(contents))
         }
+    }
+
+    func test_100WritesSplitsCorrectlyOn5Files() throws {
+        let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function)
+        let fileManager = FileManager.default
+        try? fileManager.removeItem(at: tmpDir)
+        try? fileManager.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let constructor = DefaultLoggerMessageConstructor(options: .printCategory)
+        let consoleLogger: LoggerEngine = ConsoleLogger(defaultCategory: "EXAMPLE", messageConstructor: constructor)
+        let fileURL = tmpDir.appending(path: "file.txt")
+        let fileStream = try FileLoggerStream(fileURL, fileLimits: 3 * 1024, fileTransferPolicy: .counting(maxCount: 6))
+        let fileLogger: LoggerEngine = StreamedLogger(defaultCategory: "FILE_EXAMPLE", messageConstructor: constructor, stream: fileStream)
+        let logger: LoggerEngine = CombinedLogger(consoleLogger, fileLogger)
+
+        let group = DispatchGroup()
+        let count = 100
+        for _ in 0..<count {
+            group.enter()
+        }
+        DispatchQueue.concurrentPerform(iterations: count) { index in
+            let wait = UInt32.random(in: 1..<3)
+            logger.write("Step", index, ": logging after sleeping during", wait, "seconds",
+                         "on thread", Thread.current, logType: .default)
+            group.leave()
+        }
+        group.wait()
+
+        let urls = try fileManager.contentsOfDirectory(at: tmpDir, includingPropertiesForKeys: nil)
+            .map { $0.resolvingSymlinksInPath() }
+            .filter { $0.path.starts(with: tmpDir.path) }
+        XCTAssertEqual(urls.count, 5)
+        let contents = try (0..<5).flatMap { try String(contentsOf: urls[$0])
+            .split(separator: "\n") }.filter { !$0.isEmpty }
+        XCTAssertEqual(contents.count, count)
     }
 }
