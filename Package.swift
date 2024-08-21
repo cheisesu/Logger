@@ -28,14 +28,14 @@ let package = Package(
             name: "Logger",
             dependencies: [],
             swiftSettings: [
-                .swiftLanguageVersion(.v6)
+                .swiftLanguageMode(.v6)
             ]
         ),
         .executableTarget(
             name: "Example",
             dependencies: ["Logger"],
             swiftSettings: [
-                .swiftLanguageVersion(.v6)
+                .swiftLanguageMode(.v6)
             ]
         ),
         .testTarget(
