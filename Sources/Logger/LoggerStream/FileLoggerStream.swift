@@ -11,13 +11,15 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     private let fileTransferPolicy: FileTransferPolicy?
     private let currentSizeLock: NSLock
     private var currentSize: Measurement<UnitInformationStorage>
+    private let encoding: String.Encoding
 
-    public init(_ sourceURL: URL, fileManager: FileManager = .default,
+    public init(_ sourceURL: URL, encoding: String.Encoding = .utf8, fileManager: FileManager = .default,
                 fileLimits: FileLimitsPolitics = 0, fileTransferPolicy: FileTransferPolicy? = nil) throws {
         self.sourceURL = sourceURL
         self.fileManager = fileManager
         self.fileLimits = fileLimits
         self.fileTransferPolicy = fileTransferPolicy
+        self.encoding = encoding
         fileHandleLock = NSLock()
         currentSizeLock = NSLock()
 
@@ -50,7 +52,7 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
         fileHandleLock.lock()
         defer { fileHandleLock.unlock() }
         do {
-            let data = Data(string.utf8)
+            guard let data = string.data(using: encoding) else { return }
             if #available(tvOS 13.4, macOS 10.15.4, iOS 13.4, *) {
                 try fileHandle.write(contentsOf: data)
             } else {
