@@ -1,4 +1,5 @@
 import XCTest
+import Testing
 @testable import Logger
 
 final class FileLoggerStream_tests: XCTestCase {
@@ -192,5 +193,41 @@ final class FileLoggerStream_tests: XCTestCase {
         let contents = try (0..<5).flatMap { try String(contentsOf: urls[$0])
             .split(separator: "\n") }.filter { !$0.isEmpty }
         XCTAssertEqual(contents.count, count)
+    }
+
+    // MARK: - TRANSFORMING TESTS
+
+    func test_transformingPerformed() throws {
+        try handleFile { fileURL in
+            let encoding = String.Encoding.utf8
+            let stream = try FileLoggerStream(fileURL, encoding: encoding)
+            let transformer = BlockFileStreamTransformer { Data($0.reversed()) }
+            stream.addTransformer(transformer)
+            let messageString = "Hello, world!"
+            let resultData = Data(try XCTUnwrap(messageString.data(using: encoding)?.reversed()))
+
+            stream.write(messageString)
+            let data = try Data(contentsOf: fileURL, options: .uncached)
+
+            XCTAssertEqual(data, resultData)
+        }
+    }
+
+    func test_multipleTransformingsPerformed() throws {
+        try handleFile { fileURL in
+            let encoding = String.Encoding.utf8
+            let stream = try FileLoggerStream(fileURL, encoding: encoding)
+            let transformer1 = BlockFileStreamTransformer { Data($0.reversed()) }
+            let transformer2 = BlockFileStreamTransformer { $0.base64EncodedData() }
+            stream.addTransformer(transformer1)
+            stream.addTransformer(transformer2)
+            let messageString = "Hello, world!"
+            let resultData = Data(try XCTUnwrap(messageString.data(using: encoding)?.reversed())).base64EncodedData()
+
+            stream.write(messageString)
+            let data = try Data(contentsOf: fileURL, options: .uncached)
+
+            XCTAssertEqual(data, resultData)
+        }
     }
 }
