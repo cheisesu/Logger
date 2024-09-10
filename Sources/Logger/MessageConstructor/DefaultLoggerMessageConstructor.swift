@@ -1,7 +1,7 @@
 import Foundation
 
 /// Default constructor of final messages for logger engines
-public struct DefaultLoggerMessageConstructor: LoggerMessageConstructor, @unchecked Sendable {
+public struct DefaultLoggerMessageConstructor: LoggerMessageConstructor, Sendable {
     private let options: LoggerEngineOption
     private let logTypeStringConverter: LogTypeStringConvertible
 
