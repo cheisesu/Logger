@@ -56,6 +56,6 @@ extension ConsoleLogger {
     }
 }
 
-private extension LogType {
+extension LogType {
     var osLogType: OSLogType { OSLogType(rawValue) }
 }
