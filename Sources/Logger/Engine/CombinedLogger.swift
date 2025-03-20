@@ -1,6 +1,6 @@
 import Foundation
 
-/// Logger that combines other engines and acts as proxy
+/// Logger that combines other engines and acts as proxy.
 public final class CombinedLogger: LoggerEngine, Sendable {
     private let engines: [LoggerEngine]
 
