@@ -121,6 +121,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
         XCTAssertEqual(message, "[\(category)] \(logTypeString) \(fullSourceMessage)\n\(file):\(line)\(terminator)")
     }
 
+#if canImport(os)
     func test_ConsoleLogger_ResultsMessageWithoutCategory() throws {
         let constructor: LoggerMessageConstructor = .console
         let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
@@ -129,4 +130,5 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
         let message = try XCTUnwrap(_message)
         XCTAssertEqual(message, "\(logTypeString) \(fullSourceMessage)\n\(file):\(line)\(terminator)")
     }
+#endif
 }

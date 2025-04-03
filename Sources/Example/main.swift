@@ -8,11 +8,15 @@ extension LogType {
 }
 
 let constructor = DefaultLoggerMessageConstructor(options: .printCategory)
-let consoleLogger: LoggerEngine = ConsoleLogger(defaultCategory: "EXAMPLE", messageConstructor: constructor)
 let fileURL = URL(fileURLWithPath: "\(NSHomeDirectory())/Desktop/example.log")
 let fileStream = try FileLoggerStream(fileURL, fileLimits: 3 * 1024, fileTransferPolicy: .counting(maxCount: 6))
 let fileLogger: LoggerEngine = StreamedLogger(defaultCategory: "FILE_EXAMPLE", messageConstructor: constructor, stream: fileStream)
+#if canImport(os)
+let consoleLogger: LoggerEngine = ConsoleLogger(defaultCategory: "EXAMPLE", messageConstructor: constructor)
 let logger: LoggerEngine = CombinedLogger(consoleLogger, fileLogger)
+#else
+let logger: LoggerEngine = CombinedLogger(fileLogger)
+#endif
 
 let group = DispatchGroup()
 let count = 100

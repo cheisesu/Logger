@@ -1,3 +1,4 @@
+#if canImport(os)
 import XCTest
 @testable import Logger
 import os
@@ -20,3 +21,5 @@ final class LogType_tests: XCTestCase {
         XCTAssertEqual(LogType(rawValue: 10).rawValue, 10)
     }
 }
+
+#endif

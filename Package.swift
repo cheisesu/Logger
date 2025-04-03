@@ -40,6 +40,9 @@ let package = Package(
         ),
         .testTarget(
             name: "LoggerTests",
-            dependencies: ["Logger"]),
+            dependencies: ["Logger"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
+            ]),
     ]
 )
