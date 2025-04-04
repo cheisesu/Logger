@@ -2,8 +2,7 @@ name: Build package
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on:
   pull_request:
-    types:
-      - opened
+    types: [opened, reopened, synchronize]
     branches:
       - 'develop'
 jobs:
