@@ -161,6 +161,7 @@ final class FileLoggerStream_tests: XCTestCase {
         }
     }
 
+#if canImport(os)
     func test_100WritesSplitsCorrectlyOn5Files() throws {
         let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(#function)
         let fileManager = FileManager.default
@@ -194,6 +195,7 @@ final class FileLoggerStream_tests: XCTestCase {
             .split(separator: "\n") }.filter { !$0.isEmpty }
         XCTAssertEqual(contents.count, count)
     }
+#endif
 
     // MARK: - TRANSFORMING TESTS
 

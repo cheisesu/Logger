@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// The various log levels that the unified logging system provides
 public struct LogType: RawRepresentable, Equatable, Sendable {
@@ -17,18 +19,28 @@ public struct LogType: RawRepresentable, Equatable, Sendable {
 }
 
 extension LogType {
-    private init(osLogType: OSLogType) {
-        rawValue = osLogType.rawValue
-    }
-
+#if canImport(os)
     /// The default log level
-    public static let `default` = LogType(osLogType: .default)
+    public static let `default` = LogType(rawValue: OSLogType.default.rawValue)
     /// The informative log level
-    public static let info = LogType(osLogType: .info)
+    public static let info = LogType(rawValue: OSLogType.info.rawValue)
     /// The debug log level
-    public static let debug = LogType(osLogType: .debug)
+    public static let debug = LogType(rawValue: OSLogType.debug.rawValue)
     /// The error log level
-    public static let error = LogType(osLogType: .error)
+    public static let error = LogType(rawValue: OSLogType.error.rawValue)
     /// The fault log level
-    public static let fault = LogType(osLogType: .fault)
+    public static let fault = LogType(rawValue: OSLogType.fault.rawValue)
+#else
+    /// The default log level
+    public static let `default` = LogType(rawValue: 0x00)
+    /// The informative log level
+    public static let info = LogType(rawValue: 0x01)
+    /// The debug log level
+    public static let debug = LogType(rawValue: 0x02)
+    /// The error log level
+    public static let error = LogType(rawValue: 0x10)
+    /// The fault log level
+    public static let fault = LogType(rawValue: 0x11)
+#endif
 }
+

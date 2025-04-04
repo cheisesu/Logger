@@ -1,4 +1,5 @@
 import Foundation
+#if canImport(os)
 import os
 
 /// Logger engine of system console.
@@ -59,3 +60,5 @@ extension ConsoleLogger {
 private extension LogType {
     var osLogType: OSLogType { OSLogType(rawValue) }
 }
+
+#endif
