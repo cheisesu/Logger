@@ -1,11 +1,12 @@
-name: Test package on pull request
+name: Test status for readme
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    branches:
-      - 'develop'
+#  pull_request:
+#    types: [opened, reopened, synchronize]
+#    branches:
+#      - 'master'
+  - push
 jobs:
-  pr-test:
+  build-and-test:
     name: Test package with Swift ${{ matrix.swift }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
