@@ -4,6 +4,7 @@ on:
     types: [opened, reopened, synchronize]
     branches:
       - 'develop'
+      - 'master'
 jobs:
   pr-test:
     name: Test package with Swift ${{ matrix.swift }} on ${{ matrix.os }}
@@ -22,7 +23,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Build
-        run: swift test
+        run: swift build
+      - name: Test
+        run: swift test --enable-code-coverage
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
