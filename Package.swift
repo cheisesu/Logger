@@ -18,15 +18,15 @@ let package = Package(
     targets: [
         .target(
             name: "Logger",
-            dependencies: [],
+            dependencies: []
         ),
         .executableTarget(
             name: "Example",
-            dependencies: ["Logger"],
+            dependencies: ["Logger"]
         ),
         .testTarget(
             name: "LoggerTests",
-            dependencies: ["Logger"],
+            dependencies: ["Logger"]
         ),
     ]
 )
