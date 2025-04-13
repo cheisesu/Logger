@@ -1,5 +1,4 @@
 import XCTest
-import Dispatch
 import Testing
 @testable import Logger
 
