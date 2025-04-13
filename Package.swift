@@ -19,23 +19,14 @@ let package = Package(
         .target(
             name: "Logger",
             dependencies: [],
-            swiftSettings: [
-                .swiftLanguageVersion(SwiftVersion.v5),
-            ]
         ),
         .executableTarget(
             name: "Example",
             dependencies: ["Logger"],
-            swiftSettings: [
-                .swiftLanguageVersion(SwiftVersion.v5),
-            ]
         ),
         .testTarget(
             name: "LoggerTests",
             dependencies: ["Logger"],
-            swiftSettings: [
-                .swiftLanguageVersion(SwiftVersion.v5),
-            ]
         ),
     ]
 )
