@@ -30,7 +30,7 @@ public final class ConsoleLogger: LoggerEngine, @unchecked Sendable {
         self.messageConstructor = messageConstructor
     }
 
-    public func write(_ items: Any..., category: (any LoggerCategory)?, logType: LogType,
+    public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)
     {
         osLogsLock.lock()

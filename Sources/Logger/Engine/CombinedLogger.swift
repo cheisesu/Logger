@@ -16,8 +16,9 @@ public final class CombinedLogger: LoggerEngine, Sendable {
         self.engines = engines
     }
 
-    public func write(_ items: Any..., category: (any LoggerCategory)?, logType: LogType,
-                      separator: String, terminator: String, file: String, line: Int) {
+    public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
+                      separator: String, terminator: String, file: String, line: Int)
+    {
         engines.forEach { engine in
             engine.write(items, category: category, logType: logType, separator: separator, terminator: terminator, file: file, line: line)
         }
