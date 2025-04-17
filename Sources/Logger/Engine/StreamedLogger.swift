@@ -15,7 +15,7 @@ public final class StreamedLogger: LoggerEngine, @unchecked Sendable {
         self.stream = stream
     }
 
-    public func write(_ items: Any..., category: (any LoggerCategory)?, logType: LogType,
+    public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)
     {
         let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
