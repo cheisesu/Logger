@@ -70,6 +70,6 @@ Dmitrii Shelonin, [cheisesu@gmail.com](mailto:cheisesu@gmail.com)
 [GitHubReleaseBadge]: https://img.shields.io/github/v/release/cheisesu/Logger?style=flat-square&labelColor=gray&color=blue&label=Release
 [LicenseBadge]: https://img.shields.io/github/license/cheisesu/Logger?style=flat-square&labelColor=gray&label=License
 [PlatformsBadge]: https://img.shields.io/badge/Platforms-iOS%7CtvOS%7CmacOS%7CLinux-999?style=flat-square&labelColor=gray
-[DocumentationBadge]: https://img.shields.io/github/actions/workflow/status/cheisesu/Logger/docc.yml?branch=docs&style=flat-square&label=Docs&labelColor=gray
+[DocumentationBadge]: https://img.shields.io/github/actions/workflow/status/cheisesu/Logger/docc.yml?branch=13-add-deploying-documentation&style=flat-square&label=Docs&labelColor=gray
 [DocumentationLink]: https://cheisesu.github.io/Logger/documentation/logger
 [SPMBadge]: https://img.shields.io/badge/SPM-Compatible-F05138?style=flat-square&label=SPM&labelColor=gray&color=F05138
