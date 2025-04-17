@@ -1,0 +1,48 @@
+name: Build documentation
+on:
+  push:
+    branches:
+      - 'docs'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+jobs:
+  docs:
+    name: Building package documentation
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 6
+      - name: Swift-version
+        run: swift --version
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Pages
+        uses: actions/configure-pages@v5
+      - name: DocC
+        run: swift package --allow-writing-to-package-directory generate-documentation --target Logger --output-path ./docs --transform-for-static-hosting --disable-indexing --hosting-base-path Logger
+      - name: Update root file
+        run: echo "<script>window.location.href += \"/documentation/logger\"</script>" > docs/index.html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: docs
+    steps:
+      - name: Deploy Docs
+        uses: actions/deploy-pages@v4
