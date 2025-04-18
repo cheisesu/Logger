@@ -29,3 +29,9 @@ public struct LoggerEngineOption: OptionSet, Sendable {
     /// - <doc:printLine>
     public static let console: LoggerEngineOption = [.printFile, .printLine]
 }
+
+extension LoggerEngineOption {
+    public static func -(_ left: Self, _ right: Self) -> Self {
+        left.subtracting(right)
+    }
+}
