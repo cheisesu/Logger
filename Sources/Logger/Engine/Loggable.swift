@@ -10,7 +10,7 @@ import Foundation
 ///     let category = "MyCategory"
 /// }
 /// ```
-public protocol Loggable {
+public protocol Loggable: Sendable {
     var logger: LoggerEngine { get }
     var category: LoggerCategory? { get }
 }

@@ -150,7 +150,7 @@ struct CountingFileTransferPolicyTests {
 
     @Test
     func defaultCreateFileParamCallsOriginWithFalse() throws {
-        final class _Mock: FileTransferPolicy {
+        final class _Mock: @unchecked Sendable, FileTransferPolicy {
             var performCalled = false
             var recreateSourceValue: Bool?
 
