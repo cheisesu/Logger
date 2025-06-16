@@ -1,6 +1,6 @@
 #if canImport(os)
 import XCTest
-@testable import Logger
+@testable import LoggerKit
 import os
 
 final class LogType_tests: XCTestCase {

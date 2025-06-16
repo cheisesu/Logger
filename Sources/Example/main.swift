@@ -1,5 +1,5 @@
 import Foundation
-import Logger
+import LoggerKit
 
 extension LogType {
     static func random() -> LogType {

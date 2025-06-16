@@ -1,5 +1,5 @@
 import XCTest
-@testable import Logger
+@testable import LoggerKit
 
 final class LoggerEngine_Write_tests: XCTestCase {
     override func setUp() {

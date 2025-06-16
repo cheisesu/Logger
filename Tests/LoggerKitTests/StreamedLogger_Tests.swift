@@ -1,5 +1,5 @@
 import XCTest
-@testable import Logger
+@testable import LoggerKit
 
 final class StreamedLogger_Tests: XCTestCase {
     override func setUpWithError() throws {
