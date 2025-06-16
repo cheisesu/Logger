@@ -1,6 +1,6 @@
 import XCTest
 import Testing
-@testable import Logger
+@testable import LoggerKit
 
 final class FileLoggerStream_tests: XCTestCase {
     private let fileManager = FileManager.default

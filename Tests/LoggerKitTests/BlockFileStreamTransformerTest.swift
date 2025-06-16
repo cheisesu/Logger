@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import Logger
+@testable import LoggerKit
 
 struct BlockFileStreamTransformerTests {
     @Test

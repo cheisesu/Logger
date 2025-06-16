@@ -1,5 +1,5 @@
 import XCTest
-@testable import Logger
+@testable import LoggerKit
 
 final class Number_FileLimitsPolitics_tests: XCTestCase {
     override func setUp() {
