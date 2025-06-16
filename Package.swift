@@ -28,7 +28,8 @@ let package = Package(
             name: "LoggerKit",
             dependencies: [],
             swiftSettings: [
-                .swiftLanguageMode(.v6)
+                .swiftLanguageMode(.v6),
+                .unsafeFlags(["-enable-library-evolution"]),
             ]
         ),
         .executableTarget(
