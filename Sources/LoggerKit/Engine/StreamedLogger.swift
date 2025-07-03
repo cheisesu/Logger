@@ -28,11 +28,7 @@ extension StreamedLogger: LoggerEngine {
             stream.write(message)
         }
     }
-}
 
-// MARK: - ASYNC LOGGER ENGINE CONFORMANCE
-
-extension StreamedLogger: AsyncLoggerEngine {
     public func writeAsync(_ items: [any Sendable], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int) async
     {

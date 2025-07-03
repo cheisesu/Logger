@@ -45,11 +45,7 @@ extension ConsoleLogger: LoggerEngine {
             os_log("%{public}@", log: osLog, type: logType.osLogType, message)
         }
     }
-}
 
-// MARK: - ASYNC LOGGER ENGINE CONFIRMANCE
-
-extension ConsoleLogger: AsyncLoggerEngine {
     public func writeAsync(_ items: [any Sendable], category: (any LoggerCategory)?, logType: LogType,
                            separator: String, terminator: String, file: String, line: Int) async
     {
