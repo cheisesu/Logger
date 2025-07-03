@@ -16,29 +16,25 @@ public struct BlockFileStreamTransformer: FileLoggerStreamTransformable {
     }
 }
 
-public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
+public final class FileLoggerStream: @unchecked Sendable {
+    private let accessQueue: DispatchQueue
     private let sourceURL: URL
-    private let fileHandleLock: NSLock
     private var fileHandle: FileHandle
     private let fileManager: FileManager
     private let fileLimits: FileLimitsPolitics
     private let fileTransferPolicy: FileTransferPolicy?
-    private let currentSizeLock: NSLock
     private var currentSize: Measurement<UnitInformationStorage>
     private let encoding: String.Encoding
-    private let transformersLock: NSLock
     private var transformers: [FileLoggerStreamTransformable]
 
     public init(_ sourceURL: URL, encoding: String.Encoding = .utf8, fileManager: FileManager = .default,
                 fileLimits: FileLimitsPolitics = 0, fileTransferPolicy: FileTransferPolicy? = nil) throws {
+        accessQueue = DispatchQueue(label: "com.loggerkit.stream.file")
         self.sourceURL = sourceURL
         self.fileManager = fileManager
         self.fileLimits = fileLimits
         self.fileTransferPolicy = fileTransferPolicy
         self.encoding = encoding
-        fileHandleLock = NSLock()
-        currentSizeLock = NSLock()
-        transformersLock = NSLock()
         transformers = []
 
         if !fileManager.fileExists(atPath: sourceURL.path) {
@@ -58,23 +54,43 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     }
 
     deinit {
-        fileHandleLock.lock()
-        defer { fileHandleLock.unlock() }
-        do {
-            try fileHandle.close()
-        } catch {
-        }
+        try? fileHandle.close()
     }
 
     public func addTransformer(_ transformer: FileLoggerStreamTransformable) {
-        transformersLock.lock()
-        defer { transformersLock.unlock() }
-        transformers.append(transformer)
+        accessQueue.async { [weak self] in
+            self?.transformers.append(transformer)
+        }
     }
+}
 
+// MARK: - LOGGER STREAM CONFORMANCE
+
+extension FileLoggerStream: LoggerStream {
     public func write(_ string: String) {
-        fileHandleLock.lock()
-        defer { fileHandleLock.unlock() }
+        accessQueue.sync {
+            performWrite(string)
+        }
+    }
+}
+
+// MARK: - ASYNC LOGGER STREAM CONFORMANCE
+
+extension FileLoggerStream: AsyncLoggerStream {
+    public func writeAsync(_ string: String) async {
+        return await withCheckedContinuation { continuation in
+            accessQueue.async { [weak self] in
+                self?.performWrite(string)
+                continuation.resume()
+            }
+        }
+    }
+}
+
+// MARK: - PRIVATE METHODS
+
+extension FileLoggerStream {
+    private func performWrite(_ string: String) {
         do {
             guard var data = string.data(using: encoding) else { return }
             data = try transformedData(data)
@@ -90,8 +106,6 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     }
 
     private func handleWriteSize(_ size: Measurement<UnitInformationStorage>) {
-        currentSizeLock.lock()
-        defer { currentSizeLock.unlock() }
         currentSize = currentSize + size
         if currentSize >= fileLimits.maxSize {
             changeFile()
@@ -112,8 +126,6 @@ public final class FileLoggerStream: LoggerStream, @unchecked Sendable {
     }
 
     private func transformedData(_ data: Data) throws -> Data {
-        transformersLock.lock()
-        defer { transformersLock.unlock() }
         var data = data
         for transformer in transformers {
             data = try transformer.transform(data)
