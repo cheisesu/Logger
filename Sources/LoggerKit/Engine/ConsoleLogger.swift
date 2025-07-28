@@ -11,15 +11,24 @@ public final class ConsoleLogger: @unchecked Sendable {
     private let defaultCategory: LoggerCategory
     private let subsystem: String
     private let messageConstructor: LoggerMessageConstructor
+    private var _logLevel: LogType
+
+    /// Minimal log level for messages.
+    @available(*, noasync)
+    public var logLevel: LogType {
+        get { accessQueue.sync { _logLevel } }
+        set { accessQueue.sync(flags: .barrier) { _logLevel = newValue } }
+    }
 
     /// Initializes console logger engine.
     /// - Parameters:
     ///   - subsystem: Identifier of the app which is used in Console.app. Default value is bundle identifier or `logger.box.console`
     ///   - defaultCategory: Default category for messages. Default value is `default`
     ///   - messageConstructor: Construct of final messages from several arguments. Default value is <doc:LoggerMessageConstructor/default>
+    ///   - logLevel: Minimal log level for messages.
     public init(subsystem: String = Bundle.main.bundleIdentifier ?? "logger.box.console",
                 defaultCategory: LoggerCategory = "default",
-                messageConstructor: LoggerMessageConstructor = .default)
+                messageConstructor: LoggerMessageConstructor = .default, logLevel: LogType = .default)
     {
         accessQueue = DispatchQueue(label: "com.loggerkit.logger.console")
         self.subsystem = subsystem
@@ -28,6 +37,30 @@ public final class ConsoleLogger: @unchecked Sendable {
             defaultCategory.rawLoggerCategory: OSLog(subsystem: subsystem, category: defaultCategory.rawLoggerCategory)
         ]
         self.messageConstructor = messageConstructor
+        _logLevel = logLevel
+    }
+
+    /// Sets minimal log level of messages asynchronously.
+    /// - Parameter logLevel: Minimal log level for messages.
+    public func setLogLevel(_ logLevel: LogType?) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            self.accessQueue.async { [weak self] in
+                defer { continuation.resume() }
+                guard let self else { return }
+                self._logLevel = logLevel ?? .default
+            }
+        }
+    }
+
+    /// Retrieves minimal log level for messages asynchronously.
+    /// - Returns: Current minimal log level for messages
+    public func currentLogLevel() async -> LogType {
+        await withCheckedContinuation { continuation in
+            self.accessQueue.async { [weak self] in
+                guard let self else { return continuation.resume(returning: .default) }
+                continuation.resume(returning: self._logLevel)
+            }
+        }
     }
 }
 
@@ -38,6 +71,7 @@ extension ConsoleLogger: LoggerEngine {
                       separator: String, terminator: String, file: String, line: Int)
     {
         accessQueue.sync {
+            guard logType.rawValue >= _logLevel.rawValue else { return }
             let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
                                                          separator: separator, terminator: terminator, file: file, line: line)
             guard let message else { return }
@@ -53,6 +87,7 @@ extension ConsoleLogger: LoggerEngine {
             self.accessQueue.async { [weak self] in
                 defer { continuation.resume() }
                 guard let self else { return }
+                guard logType.rawValue >= _logLevel.rawValue else { return }
                 let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
                                                              separator: separator, terminator: terminator, file: file, line: line)
                 guard let message else { return }
