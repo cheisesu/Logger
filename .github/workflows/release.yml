@@ -2,9 +2,9 @@ name: Release
 on:
   push:
     branches:
-      - 'master'
-    tags:
-      - 'v*'
+      - 'release'
+    # tags:
+    #   - 'v*'
 jobs:
   release:
     name: Releasing new versions
@@ -95,11 +95,15 @@ jobs:
       - name: Debug tag values
         run: |
           echo "Tag: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}"
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+      # - name: Publish GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+      #     name: Release ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+      #     body_path: RELEASE_CHANGELOG.md
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy docs
+        uses: ./.github/workflows/docc.yml
         with:
-          tag_name: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
-          name: Release ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
-          body_path: RELEASE_CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}

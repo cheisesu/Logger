@@ -1,8 +1,10 @@
 name: Build documentation
 on:
-  push:
-    branches:
-      - 'master'
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 permissions:
   contents: read
   pages: write
@@ -18,31 +20,52 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: 6
-      - name: Swift-version
-        run: swift --version
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Set up Pages
-        uses: actions/configure-pages@v5
-      - name: DocC
-        run: swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs --transform-for-static-hosting --disable-indexing --hosting-base-path LoggerKit
-      - name: Update root file
-        run: echo "<script>window.location.href += \"/documentation/loggerkit\"</script>" > docs/index.html
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs
+      - name: Get previous stable release tag
+        id: get_previous_release
+        run: |
+          TAG=$(gh release list --limit 100 \
+            --json tagName,isPrerelease,isDraft \
+            --jq '[.[] | select(.isDraft == false and .isPrerelease == false)] | .[1].tagName')
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: docs
-    steps:
-      - name: Deploy Docs
-        uses: actions/deploy-pages@v4
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo $TAG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Setup Swift
+  #       uses: swift-actions/setup-swift@v2
+  #       with:
+  #         swift-version: 6
+  #     - name: Swift-version
+  #       run: swift --version
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ inputs.tag }}
+  #     - name: Set up Pages
+  #       uses: actions/configure-pages@v5
+  #     - name: DocC
+  #       run: swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs/${{ inputs.tag }} --transform-for-static-hosting --disable-indexing --hosting-base-path LoggerKit/${{ inputs.tag }}
+  #     - name: Update root file
+  #       run: echo "<script>window.location.href += \"/documentation/loggerkit\"</script>" > docs/index.html
+  #     - name: Copy version to latest
+  #       run: cp -r ./docs/${{ inputs.tag }} ./docs/latest
+  #     # - name: Upload artifacts
+  #     #   uses: actions/upload-pages-artifact@v3
+  #     #   with:
+  #     #     path: ./docs
+  #     - name: Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v4
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./docs
+  #         keep_files: true
+
+  # deploy:
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   runs-on: ubuntu-latest
+  #   needs: docs
+  #   steps:
+  #     - name: Deploy Docs
+  #       uses: actions/deploy-pages@v4
