@@ -7,7 +7,7 @@ on:
     #   - 'v*'
 jobs:
   release:
-    name: Building package documentation
+    name: Releasing new versions
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -93,3 +93,11 @@ jobs:
           cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tags.outputs.CURRENT_TAG }}
+          name: Release ${{ steps.get_tags.outputs.CURRENT_TAG }}
+          body_path: RELEASE_CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
