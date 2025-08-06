@@ -2,9 +2,9 @@ name: Release
 on:
   push:
     branches:
-      - 'releases'
-    # tags:
-    #   - 'v*'
+      - 'master'
+    tags:
+      - 'v*'
 jobs:
   release:
     name: Releasing new versions
