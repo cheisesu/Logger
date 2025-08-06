@@ -1,0 +1,34 @@
+name: Release
+on:
+  push:
+    branches:
+      - 'releases'
+    # tags:
+    #   - 'v*'
+jobs:
+  release:
+    name: Building package documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch tags to local git
+        run: |
+          git fetch --tags --prune --unshallow || true
+      - name: Extract previous tag
+        id: get_previous_tag
+        run: |
+          PREV_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
+          echo "PREVIOUS_TAG=$PREV_TAG" >> $GITHUB_OUTPUT
+      - name: Generate Changelog from PRs (develop branch)
+        id: changelog
+        run: |
+          LOG=$(gh pr list \
+            --base develop \
+            --state merged \
+            --search "merged:>${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}" \
+            --json title,number,body \
+            --jq '.[] | "- \(.title) (#\(.number))"')
+          echo -e "## What's Changed\n\n$LOG" > RELEASE_CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
