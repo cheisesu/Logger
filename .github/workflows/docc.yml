@@ -29,7 +29,7 @@ jobs:
       - name: Set up Pages
         uses: actions/configure-pages@v5
       - name: DocC
-        run: swift package --allow-writing-to-package-directory generate-documentation --target Logger --output-path ./docs --transform-for-static-hosting --disable-indexing --hosting-base-path Logger
+        run: swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs --transform-for-static-hosting --disable-indexing --hosting-base-path Logger
       - name: Update root file
         run: echo "<script>window.location.href += \"/documentation/logger\"</script>" > docs/index.html
       - name: Upload artifact
