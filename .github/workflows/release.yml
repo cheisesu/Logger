@@ -24,13 +24,26 @@ jobs:
       - name: Generate Changelog from PRs (develop branch)
         id: changelog
         run: |
-          LOG=$(gh pr list \
-            --base develop \
-            --state merged \
-            --search "merged:>${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}" \
-            --json title,number,body \
-            --jq '.[] | "- \(.title) (#\(.number))"')
-          echo -e "## What's Changed\n\n$LOG" > RELEASE_CHANGELOG.md
-          echo $LOG
+          PREV=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
+          CURR=${{ github.ref_name }}
+
+          echo "Previous tag: $PREV"
+          echo "Current tag: $CURR"
+
+          COMMITS=$(git log $PREV..$CURR --pretty=format:"%H")
+          echo "Commits between $PREV and $CURR:"
+          echo "$COMMITS"
+
+          echo "PRs merged between tags:" > RELEASE_CHANGELOG.md
+
+          for COMMIT in $COMMITS; do
+            PR_NUMBER=$(gh pr list --search "$COMMIT" --state merged --json number,title --jq '.[0].number')
+            PR_TITLE=$(gh pr list --search "$COMMIT" --state merged --json number,title --jq '.[0].title')
+            if [ "$PR_NUMBER" != "null" ]; then
+              echo "- $PR_TITLE (#$PR_NUMBER)" >> RELEASE_CHANGELOG.md
+            fi
+          done
+
+          cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
