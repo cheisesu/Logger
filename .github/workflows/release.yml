@@ -24,26 +24,31 @@ jobs:
       - name: Generate Changelog from PRs (develop branch)
         id: changelog
         run: |
-          PREV=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
-          CURR=${{ github.ref_name }}
+          PREV_TAG=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
+          # CURR_TAG=${{ github.ref_name }}
+          CURR_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --max-count=1`)
 
-          echo "Previous tag: $PREV"
-          echo "Current tag: $CURR"
+          echo "🔁 Comparing: $PREV_TAG..$CURR_TAG"
 
-          COMMITS=$(git log $PREV..$CURR --pretty=format:"%H")
-          echo "Commits between $PREV and $CURR:"
-          echo "$COMMITS"
+          COMMITS=$(gh api repos/${{ github.repository }}/compare/$PREV_TAG...$CURR_TAG \
+            --jq '.commits[].sha')
+          echo $COMMITS
 
-          echo "PRs merged between tags:" > RELEASE_CHANGELOG.md
+          # echo "## What's Changed" > RELEASE_CHANGELOG.md
+          # echo "" >> RELEASE_CHANGELOG.md
 
-          for COMMIT in $COMMITS; do
-            PR_NUMBER=$(gh pr list --search "$COMMIT" --state merged --json number,title --jq '.[0].number')
-            PR_TITLE=$(gh pr list --search "$COMMIT" --state merged --json number,title --jq '.[0].title')
-            if [ "$PR_NUMBER" != "null" ]; then
-              echo "- $PR_TITLE (#$PR_NUMBER)" >> RELEASE_CHANGELOG.md
-            fi
-          done
+          # for SHA in $COMMITS; do
+          #   # PR_JSON=$(gh pr list --search "$SHA" --state merged --json number,title --jq '.[0]')
+          #   PR_JSON=$(gh pr view $SHA --json number,title 2>/dev/null || true)
+          #   if [ "$PR_JSON" != "null" ]; then
+          #     # PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
+          #     # PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
+          #     # echo "- $PR_TITLE (#$PR_NUMBER)" >> RELEASE_CHANGELOG.md
+          #     echo "$PR_JSON" > RELEASE_CHANGELOG.md
+          #     echo "" >> RELEASE_CHANGELOG.md
+          #   fi
+          # done
 
-          cat RELEASE_CHANGELOG.md
+          # cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
