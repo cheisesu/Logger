@@ -2,7 +2,7 @@ name: Build documentation
 on:
   push:
     branches:
-      - '13-add-deploying-documentation'
+      - 'master'
 permissions:
   contents: read
   pages: write
