@@ -18,37 +18,78 @@ jobs:
       - name: Extract previous tag
         id: get_previous_tag
         run: |
-          PREV_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
-          echo "PREVIOUS_TAG=$PREV_TAG" >> $GITHUB_OUTPUT
-          echo $PREV_TAG
+          TAGS=($(git tag --sort=-v:refname))
+          {
+            echo "PREVIOUS_TAG=${TAGS[1]}"
+            echo "CURRENT_TAG=${TAGS[0]}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Debug tag outputs
+        run: |
+          echo "✅ PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}"
+          echo "✅ CURRENT_TAG:  ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}"
       - name: Generate Changelog from PRs (develop branch)
         id: changelog
         run: |
-          PREV_TAG=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
-          # CURR_TAG=${{ github.ref_name }}
-          CURR_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --max-count=1`)
+          PREV_TAG=${{ steps.get_tags.outputs.PREVIOUS_TAG }}
+          CURR_TAG=${{ steps.get_tags.outputs.CURRENT_TAG }}
 
-          echo "🔁 Comparing: $PREV_TAG..$CURR_TAG"
+          PREV_DATE=$(git log -1 --format=%aI $PREV_TAG)
+          CURR_DATE=$(git log -1 --format=%aI $CURR_TAG)
 
-          COMMITS=$(gh api repos/${{ github.repository }}/compare/$PREV_TAG...$CURR_TAG \
-            --jq '.commits[].sha')
-          echo $COMMITS
+          echo "🔁 Getting PRs merged to develop from $PREV_DATE to $CURR_DATE"
 
-          # echo "## What's Changed" > RELEASE_CHANGELOG.md
-          # echo "" >> RELEASE_CHANGELOG.md
+          ADDED=""
+          FIXED=""
+          BREAKING=""
+          OTHER=""
 
-          # for SHA in $COMMITS; do
-          #   # PR_JSON=$(gh pr list --search "$SHA" --state merged --json number,title --jq '.[0]')
-          #   PR_JSON=$(gh pr view $SHA --json number,title 2>/dev/null || true)
-          #   if [ "$PR_JSON" != "null" ]; then
-          #     # PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
-          #     # PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
-          #     # echo "- $PR_TITLE (#$PR_NUMBER)" >> RELEASE_CHANGELOG.md
-          #     echo "$PR_JSON" > RELEASE_CHANGELOG.md
-          #     echo "" >> RELEASE_CHANGELOG.md
-          #   fi
-          # done
+          PR_NUMBERS=$(gh pr list \
+            --base develop \
+            --state merged \
+            --search "merged:>=$PREV_DATE merged:<=$CURR_DATE" \
+            --json number,labels,title \
+            --jq '.[] | select(.labels | length > 0) | [.number, .title, (.labels[].name)] | @tsv')
+          echo $PR_NUMBERS
+          
+          while IFS=$'\t' read -r PR_NUMBER TITLE LABEL; do
+            TITLE_CLEANED=$(echo "$TITLE" | sed -E 's/^\[[^]]*\] *//' | sed -E 's/^(.)/\U\1/')
 
-          # cat RELEASE_CHANGELOG.md
+            if echo "$LABEL" | grep -qi 'breaking'; then
+              BREAKING+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            elif echo "$LABEL" | grep -qi 'fix'; then
+              FIXED+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            elif echo "$LABEL" | grep -qi 'enhancement\|feature\|add'; then
+              ADDED+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            else
+              OTHER+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            fi
+          done <<< "$PR_NUMBERS"
+
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$ADDED" ]; then
+              echo "### Added"
+              echo -e "$ADDED"
+              echo
+            fi
+            if [ -n "$FIXED" ]; then
+              echo "### Fixed"
+              echo -e "$FIXED"
+              echo
+            fi
+            if [ -n "$BREAKING" ]; then
+              echo "### Breaking"
+              echo -e "$BREAKING"
+              echo
+            fi
+            if [ -n "$OTHER" ]; then
+              echo "### Other"
+              echo -e "$OTHER"
+              echo
+            fi
+          } > RELEASE_CHANGELOG.md
+
+          cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
