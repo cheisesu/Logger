@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - 'releases'
-    tags:
-      - 'v*'
+    # tags:
+    #   - 'v*'
 jobs:
   release:
     name: Releasing new versions
