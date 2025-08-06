@@ -30,8 +30,8 @@ jobs:
       - name: Generate Changelog from PRs (develop branch)
         id: changelog
         run: |
-          PREV_TAG=${{ steps.get_tags.outputs.PREVIOUS_TAG }}
-          CURR_TAG=${{ steps.get_tags.outputs.CURRENT_TAG }}
+          PREV_TAG=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
+          CURR_TAG=${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
 
           PREV_DATE=$(git log -1 --format=%aI $PREV_TAG)
           CURR_DATE=$(git log -1 --format=%aI $CURR_TAG)
@@ -49,7 +49,6 @@ jobs:
             --search "merged:>=$PREV_DATE merged:<=$CURR_DATE" \
             --json number,labels,title \
             --jq '.[] | select(.labels | length > 0) | [.number, .title, (.labels[].name)] | @tsv')
-          echo $PR_NUMBERS
           
           while IFS=$'\t' read -r PR_NUMBER TITLE LABEL; do
             TITLE_CLEANED=$(echo "$TITLE" | sed -E 's/^\[[^]]*\] *//' | sed -E 's/^(.)/\U\1/')
@@ -93,11 +92,14 @@ jobs:
           cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug tag values
+        run: |
+          echo "Tag: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}"
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get_tags.outputs.CURRENT_TAG }}
-          name: Release ${{ steps.get_tags.outputs.CURRENT_TAG }}
+          tag_name: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+          name: Release ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
           body_path: RELEASE_CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
