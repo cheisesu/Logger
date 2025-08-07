@@ -2,12 +2,12 @@ name: Release
 on:
   push:
     branches:
-      - 'releases'
-    # tags:
-    #   - 'v*'
+      - 'master'
+    tags:
+      - 'v*'
 jobs:
   release:
-    name: Building package documentation
+    name: Releasing new versions
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,17 +18,92 @@ jobs:
       - name: Extract previous tag
         id: get_previous_tag
         run: |
-          PREV_TAG=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
-          echo "PREVIOUS_TAG=$PREV_TAG" >> $GITHUB_OUTPUT
+          TAGS=($(git tag --sort=-v:refname))
+          {
+            echo "PREVIOUS_TAG=${TAGS[1]}"
+            echo "CURRENT_TAG=${TAGS[0]}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Debug tag outputs
+        run: |
+          echo "✅ PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}"
+          echo "✅ CURRENT_TAG:  ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}"
       - name: Generate Changelog from PRs (develop branch)
         id: changelog
         run: |
-          LOG=$(gh pr list \
+          PREV_TAG=${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}
+          CURR_TAG=${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+
+          PREV_DATE=$(git log -1 --format=%aI $PREV_TAG)
+          CURR_DATE=$(git log -1 --format=%aI $CURR_TAG)
+
+          echo "🔁 Getting PRs merged to develop from $PREV_DATE to $CURR_DATE"
+
+          ADDED=""
+          FIXED=""
+          BREAKING=""
+          OTHER=""
+
+          PR_NUMBERS=$(gh pr list \
             --base develop \
             --state merged \
-            --search "merged:>${{ steps.get_previous_tag.outputs.PREVIOUS_TAG }}" \
-            --json title,number,body \
-            --jq '.[] | "- \(.title) (#\(.number))"')
-          echo -e "## What's Changed\n\n$LOG" > RELEASE_CHANGELOG.md
+            --search "merged:>=$PREV_DATE merged:<=$CURR_DATE" \
+            --json number,labels,title \
+            --jq '.[] | select(.labels | length > 0) | [.number, .title, (.labels[].name)] | @tsv')
+          
+          while IFS=$'\t' read -r PR_NUMBER TITLE LABEL; do
+            TITLE_CLEANED=$(echo "$TITLE" | sed -E 's/^\[[^]]*\] *//' | sed -E 's/^(.)/\U\1/')
+
+            if echo "$LABEL" | grep -qi 'breaking'; then
+              BREAKING+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            elif echo "$LABEL" | grep -qi 'fix'; then
+              FIXED+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            elif echo "$LABEL" | grep -qi 'enhancement\|feature\|add'; then
+              ADDED+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            else
+              OTHER+="- $TITLE_CLEANED (#$PR_NUMBER)\n"
+            fi
+          done <<< "$PR_NUMBERS"
+
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$ADDED" ]; then
+              echo "### Added"
+              echo -e "$ADDED"
+              echo
+            fi
+            if [ -n "$FIXED" ]; then
+              echo "### Fixed"
+              echo -e "$FIXED"
+              echo
+            fi
+            if [ -n "$BREAKING" ]; then
+              echo "### Breaking"
+              echo -e "$BREAKING"
+              echo
+            fi
+            if [ -n "$OTHER" ]; then
+              echo "### Other"
+              echo -e "$OTHER"
+              echo
+            fi
+          } > RELEASE_CHANGELOG.md
+
+          cat RELEASE_CHANGELOG.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug tag values
+        run: |
+          echo "Tag: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}"
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+          name: Release ${{ steps.get_previous_tag.outputs.CURRENT_TAG }}
+          body_path: RELEASE_CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-docs:
+    uses: ./.github/workflows/docc.yml
+    needs: release
