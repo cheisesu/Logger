@@ -1,0 +1,70 @@
+name: Build documentation
+on: workflow_call
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+jobs:
+  docs:
+    name: Building package documentation
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 6
+          skip-signature-verification: true
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Get previous stable release tag
+        id: get_last_release
+        run: |
+          TAG=$(gh release list \
+            --json tagName,isPrerelease,isDraft,isLatest \
+            --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo $TAG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout tag
+        run: |
+          git checkout ${{ steps.get_last_release.outputs.TAG }}
+      - name: Restore previously deployed docs
+        run: |
+          git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages-tmp || true
+          mkdir -p docs
+          cp -r gh-pages-tmp/* docs/ || true
+      - name: DocC
+        run: swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs/${{ steps.get_last_release.outputs.TAG }} --transform-for-static-hosting --disable-indexing --hosting-base-path LoggerKit/${{ steps.get_last_release.outputs.TAG }}
+      - name: Update doc's version index.html
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=documentation/loggerkit">' > "./docs/${{ steps.get_last_release.outputs.TAG }}/index.html"
+      - name: Update redirecting to this version
+        run: |
+          cd ./docs
+          TAG="${{ steps.get_last_release.outputs.TAG }}"
+          printf '%s\n' \
+            '<!doctype html>' \
+            '<meta charset="utf-8">' \
+            "<meta http-equiv=\"refresh\" content=\"0; url=./${TAG}/documentation/loggerkit/\">" \
+            "<link rel=\"canonical\" href=\"./${TAG}/documentation/loggerkit/\">" \
+            '<title>Redirecting…</title>' \
+            '<p>Redirecting to latest docs…</p>' \
+            "<script>location.replace(\"./${TAG}/documentation/loggerkit/\");</script>" \
+            > index.html
+      - name: Publish to gh-pages (preserve previous versions)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          keep_files: true  

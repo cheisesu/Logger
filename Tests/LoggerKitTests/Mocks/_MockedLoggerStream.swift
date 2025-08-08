@@ -1,5 +1,5 @@
 import Foundation
-@testable import Logger
+@testable import LoggerKit
 
 final class _MockedLoggerStream: LoggerStream, @unchecked Sendable {
     var writeCalled: Bool = false

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import Logger
+@testable import LoggerKit
 
 struct CountingFileTransferPolicyTests {
     private let fileManager: FileManager = .default
@@ -150,7 +150,7 @@ struct CountingFileTransferPolicyTests {
 
     @Test
     func defaultCreateFileParamCallsOriginWithFalse() throws {
-        final class _Mock: FileTransferPolicy {
+        final class _Mock: @unchecked Sendable, FileTransferPolicy {
             var performCalled = false
             var recreateSourceValue: Bool?
 

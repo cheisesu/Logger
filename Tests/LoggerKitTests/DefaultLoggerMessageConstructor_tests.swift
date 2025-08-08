@@ -1,5 +1,5 @@
 import XCTest
-@testable import Logger
+@testable import LoggerKit
 
 final class DefaultLoggerMessageConstructor_tests: XCTestCase {
     private let sourceMessage1 = "source"

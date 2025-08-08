@@ -1,5 +1,5 @@
 import Foundation
-@testable import Logger
+@testable import LoggerKit
 
 final class _MockedLoggerEngine: LoggerEngine, @unchecked Sendable {
     var writeCalled: Bool = false
@@ -11,7 +11,7 @@ final class _MockedLoggerEngine: LoggerEngine, @unchecked Sendable {
     var writeSeparator: String?
     var writeTerminator: String?
 
-    func write(_ items: Any..., category: (any LoggerCategory)?, logType: LogType, separator: String, terminator: String, file: String, line: Int) {
+    func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType, separator: String, terminator: String, file: String, line: Int) {
         writeCalled = true
         writeItems = items
         writeCategory = category
