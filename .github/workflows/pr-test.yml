@@ -5,9 +5,6 @@ on:
     branches:
       - 'develop'
       - 'master'
-  push:
-    branches:
-      - 'master'
 jobs:
   pr-test:
     name: Test package with Swift ${{ matrix.swift }} on ${{ matrix.os }}
@@ -21,6 +18,7 @@ jobs:
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: ${{ matrix.swift }}
+          skip-signature-verification: true
       - name: Swift-version
         run: swift --version
       - name: Check out repository code
