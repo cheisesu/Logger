@@ -1,6 +1,7 @@
 import Foundation
 
 /// Describes what a logger have to do
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public protocol LoggerEngine: Sendable {
     /// Writes the textual representations of the given items into the source engine.
     /// - Parameters:
@@ -29,6 +30,7 @@ public protocol LoggerEngine: Sendable {
 
 // MARK: - SYNC OVERLOADS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LoggerEngine {
     /// Writes the textual representations of the given items into the source engine.
     /// - Parameters:
@@ -67,6 +69,7 @@ extension LoggerEngine {
 
 // MARK: - ASYNC OVERLOADS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LoggerEngine {
     /// Asynchronously writes the textual representations of the given items into the source engine.
     /// - Parameters:

@@ -10,11 +10,13 @@ import Foundation
 ///     let category = "MyCategory"
 /// }
 /// ```
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public protocol Loggable: Sendable {
     var logger: LoggerEngine? { get }
     var category: LoggerCategory? { get }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Loggable {
     /// Wrapper to write debug messages shortly from self.
     /// - Parameters:

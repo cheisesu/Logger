@@ -1,6 +1,7 @@
 import Foundation
 
 /// Provides methods to construct final log messages based on arguments
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public protocol LoggerMessageConstructor: Sendable {
     /// Constructs final message from passed parameters.
     /// - Parameters:

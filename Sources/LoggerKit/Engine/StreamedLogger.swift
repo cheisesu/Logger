@@ -1,5 +1,6 @@
 import Foundation
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public final class StreamedLogger: @unchecked Sendable {
     private let defaultCategory: LoggerCategory
     private let messageConstructor: LoggerMessageConstructor
@@ -49,6 +50,7 @@ public final class StreamedLogger: @unchecked Sendable {
 
 // MARK: - LOGGER ENGINE CONFORMANCE
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension StreamedLogger: LoggerEngine {
     public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)

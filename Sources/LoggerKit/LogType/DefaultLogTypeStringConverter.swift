@@ -1,10 +1,12 @@
 import Foundation
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LogTypeStringConvertible where Self == DefaultLogTypeStringConverter {
     public static var `default`: LogTypeStringConvertible { DefaultLogTypeStringConverter() }
 }
 
 /// Default implementation of converting provided types of log messages to a string
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public struct DefaultLogTypeStringConverter: LogTypeStringConvertible {
     /// Indicates options for converting
     public struct Option: OptionSet, Sendable {

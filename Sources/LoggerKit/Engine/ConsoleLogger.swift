@@ -5,6 +5,7 @@ import os
 /// Logger engine of system console.
 ///
 /// This engine writes messages to the system log, that you can see in Console.app.
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public final class ConsoleLogger: @unchecked Sendable {
     private let accessQueue: DispatchQueue
     private var osLogs: [String: OSLog]
@@ -66,6 +67,7 @@ public final class ConsoleLogger: @unchecked Sendable {
 
 // MARK: - LOGGER ENGINE CONFIRMANCE
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension ConsoleLogger: LoggerEngine {
     public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)

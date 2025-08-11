@@ -1,9 +1,11 @@
 import Foundation
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public protocol FileLoggerStreamTransformable: Sendable {
     func transform(_ data: Data) throws -> Data
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public struct BlockFileStreamTransformer: FileLoggerStreamTransformable {
     private let block: @Sendable (Data) throws -> Data
 
@@ -16,6 +18,7 @@ public struct BlockFileStreamTransformer: FileLoggerStreamTransformable {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public final class FileLoggerStream: @unchecked Sendable {
     private let accessQueue: DispatchQueue
     private let sourceURL: URL
@@ -66,6 +69,7 @@ public final class FileLoggerStream: @unchecked Sendable {
 
 // MARK: - LOGGER STREAM CONFORMANCE
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension FileLoggerStream: LoggerStream {
     public func write(_ string: String) {
         accessQueue.sync {
@@ -76,6 +80,7 @@ extension FileLoggerStream: LoggerStream {
 
 // MARK: - ASYNC LOGGER STREAM CONFORMANCE
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension FileLoggerStream: AsyncLoggerStream {
     public func writeAsync(_ string: String) async {
         return await withCheckedContinuation { continuation in
@@ -89,6 +94,7 @@ extension FileLoggerStream: AsyncLoggerStream {
 
 // MARK: - PRIVATE METHODS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension FileLoggerStream {
     private func performWrite(_ string: String) {
         do {
