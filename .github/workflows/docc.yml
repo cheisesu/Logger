@@ -55,10 +55,6 @@ jobs:
       - name: Checkout tag
         run: |
           git checkout ${{ needs.resolve_tag.outputs.TAG }}
-      # - name: Restore previously deployed docs
-      #   run: |
-      #     git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages-tmp || true
-      #     cp -r gh-pages-tmp/* ./docs || true
       - name: DocC
         run: |
           rm -rf ./{{ needs.resolve_tag.outputs.TAG }} || true
@@ -76,10 +72,48 @@ jobs:
         with:
           name: docs-linux
           path: docs-linux.tar.gz
+
+  build_apple:
+    name: Building package documentation for Apple
+    needs: resolve_tag
+    runs-on: macos-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 6
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Checkout tag
+        run: |
+          git checkout ${{ needs.resolve_tag.outputs.TAG }}
+      - name: DocC
+        run: |
+          rm -rf ./{{ needs.resolve_tag.outputs.TAG }} || true
+          swift package --allow-writing-to-package-directory\
+            generate-documentation \
+            --target LoggerKit \
+            --output-path ./${{ needs.resolve_tag.outputs.TAG }} \
+            --transform-for-static-hosting \
+            --disable-indexing \
+            --hosting-base-path ${{ github.event.repository.name }}/apple/${{ needs.resolve_tag.outputs.TAG }}
+          touch ./${{ needs.resolve_tag.outputs.TAG }}/.nojekyll
+      - name: Archive site (Apple)
+        run: tar -C ./${{ needs.resolve_tag.outputs.TAG }} -czf docs-apple.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-apple
+          path: docs-apple.tar.gz
   
   assemble_and_publish:
     name: Assemble & Publish gh-pages
-    needs: [resolve_tag, build_linux]
+    needs: [resolve_tag, build_linux, build_apple]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -90,17 +124,22 @@ jobs:
         with:
           name: docs-linux
           path: .
+      - name: Download Apple artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-apple
+          path: .
       - name: Extract files
         run: |
           VER="${{ needs.resolve_tag.outputs.TAG }}"
           mkdir -p "docs/linux/${VER}"
           tar -xzf docs-linux.tar.gz -C "docs/linux/${VER}"
-          # mkdir -p "docs/apple/${VER}"
-          # tar -xzf docs-apple.tar.gz -C "docs/apple/${VER}"
+          mkdir -p "docs/apple/${VER}"
+          tar -xzf docs-apple.tar.gz -C "docs/apple/${VER}"
       - name: Version sub-indexes
         run: |
           VER="${{ needs.resolve_tag.outputs.TAG }}"
-          # echo '<meta http-equiv="refresh" content="0; url=./documentation/loggerkit/">' > "docs/apple/$VER/index.html"
+          echo '<meta http-equiv="refresh" content="0; url=./documentation/loggerkit/">' > "docs/apple/$VER/index.html"
           echo '<meta http-equiv="refresh" content="0; url=./documentation/loggerkit/">' > "docs/linux/$VER/index.html"
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
