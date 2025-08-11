@@ -118,4 +118,11 @@ private extension LogType {
     var osLogType: OSLogType { OSLogType(rawValue) }
 }
 
+#else
+
+@available(*, unavailable)
+public final class ConsoleLogger {
+
+}
+
 #endif // canImport(os)
