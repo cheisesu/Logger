@@ -12,8 +12,31 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 jobs:
-  docs-linux:
-    name: Building package documentation
+  resolve_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      TAG: ${{ steps.get_last_release.outputs.TAG }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Get previous stable release tag
+        id: get_last_release
+        run: |
+          # TAG=$(gh release list \
+          #   --json tagName,isPrerelease,isDraft,isLatest \
+          #   --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
+          TAG=v0.1.3
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved TAG=$TAG"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    name: Building package documentation for Linux
+    needs: resolve_tag
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -28,47 +51,47 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Get previous stable release tag
-        id: get_last_release
-        run: |
-          TAG=$(gh release list \
-            --json tagName,isPrerelease,isDraft,isLatest \
-            --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
-          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-          echo $TAG
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout tag
         run: |
-          git checkout ${{ steps.get_last_release.outputs.TAG }}
+          git checkout ${{ needs.resolve_tag.outputs.TAG }}
       - name: Restore previously deployed docs
         run: |
           git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages-tmp || true
           cp -r gh-pages-tmp/* ./docs || true
       - name: DocC
         run: |
-          mkdir -p ./docs/Linux
-          swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs/Linux/${{ steps.get_last_release.outputs.TAG }} --transform-for-static-hosting --disable-indexing --hosting-base-path LoggerKit/${{ steps.get_last_release.outputs.TAG }}
+          mkdir -p ./docs/linux
+          rm -rf ./docs/linux/${{ needs.resolve_tag.outputs.TAG }} || true
+          swift package --allow-writing-to-package-directory\
+            generate-documentation \
+            --target LoggerKit \
+            --output-path ./docs/linux/${{ needs.resolve_tag.outputs.TAG }} \
+            --transform-for-static-hosting \
+            --disable-indexing \
+            --hosting-base-path ${{ github.event.repository.name }}/linux/${{ needs.resolve_tag.outputs.TAG }}
+          touch ./docs/linux/${{ needs.resolve_tag.outputs.TAG }}/.nojekyll
       - name: Update doc's version index.html
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=documentation/loggerkit">' > "./docs/Linux/${{ steps.get_last_release.outputs.TAG }}/index.html"
+          echo '<meta http-equiv="refresh" content="0; url=documentation/loggerkit/">' > "./docs/linux/${{ needs.resolve_tag.outputs.TAG }}/index.html"
       - name: Update redirecting to this version
         run: |
-          cd ./docs/Linux
-          TAG="${{ steps.get_last_release.outputs.TAG }}"
-          printf '%s\n' \
-            '<!doctype html>' \
-            '<meta charset="utf-8">' \
-            "<meta http-equiv=\"refresh\" content=\"0; url=./${TAG}/documentation/loggerkit/\">" \
-            "<link rel=\"canonical\" href=\"./${TAG}/documentation/loggerkit/\">" \
-            '<title>Redirecting…</title>' \
-            '<p>Redirecting to latest docs…</p>' \
-            "<script>location.replace(\"./${TAG}/documentation/loggerkit/\");</script>" \
-            > index.html
+          rm -f ./docs/index.html
+          # cd ./docs/linux
+          # TAG="${{ needs.resolve_tag.outputs.TAG }}"
+          # printf '%s\n' \
+          #   '<!doctype html>' \
+          #   '<meta charset="utf-8">' \
+          #   "<meta http-equiv=\"refresh\" content=\"0; url=./${TAG}/documentation/loggerkit/\">" \
+          #   "<link rel=\"canonical\" href=\"./${TAG}/documentation/loggerkit/\">" \
+          #   '<title>Redirecting…</title>' \
+          #   '<p>Redirecting to latest docs…</p>' \
+          #   "<script>location.replace(\"./${TAG}/documentation/loggerkit/\");</script>" \
+          #   > index.html
       - name: Publish to gh-pages (preserve previous versions)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
           publish_branch: gh-pages
+          commit_message: tag-${{ needs.resolve_tag.outputs.TAG }}
           keep_files: true  
