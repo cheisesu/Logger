@@ -4,6 +4,7 @@ import os
 #endif
 
 /// The various log levels that the unified logging system provides
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public struct LogType: RawRepresentable, Equatable, Sendable {
     public let rawValue: UInt8
 
@@ -18,6 +19,7 @@ public struct LogType: RawRepresentable, Equatable, Sendable {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LogType {
 #if canImport(os)
     /// The default log level

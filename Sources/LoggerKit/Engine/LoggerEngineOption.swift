@@ -1,6 +1,7 @@
 import Foundation
 
 /// Options that may be used in a logger engine
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public struct LoggerEngineOption: OptionSet, Sendable {
     public var rawValue: UInt32
 
@@ -30,6 +31,7 @@ public struct LoggerEngineOption: OptionSet, Sendable {
     public static let console: LoggerEngineOption = [.printFile, .printLine]
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LoggerEngineOption {
     public static func -(_ left: Self, _ right: Self) -> Self {
         left.subtracting(right)

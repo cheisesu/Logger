@@ -1,0 +1,13 @@
+{
+    "name": "dmitrii-shelonin.me",
+    "version": "0.0.1",
+    "description": "Placeholder personal web site",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.7",
+        "express": "^4.18.4"
+    }
+}

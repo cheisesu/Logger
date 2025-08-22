@@ -2,6 +2,7 @@ import Foundation
 
 // MARK: - UNSIGNED INTS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension UInt64: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -9,6 +10,7 @@ extension UInt64: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension UInt32: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -16,6 +18,7 @@ extension UInt32: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension UInt16: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -23,6 +26,7 @@ extension UInt16: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension UInt8: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -30,6 +34,7 @@ extension UInt8: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension UInt: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -39,6 +44,7 @@ extension UInt: FileLimitsPolitics {
 
 // MARK: - SIGNED INTS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Int64: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -46,6 +52,7 @@ extension Int64: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Int32: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -53,6 +60,7 @@ extension Int32: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Int16: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -60,6 +68,7 @@ extension Int16: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Int8: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -67,6 +76,7 @@ extension Int8: FileLimitsPolitics {
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Int: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         let bytes = Double(self)
@@ -76,12 +86,14 @@ extension Int: FileLimitsPolitics {
 
 // MARK: - FLOATS
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Double: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         return Measurement(value: self, unit: .bytes)
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension Float: FileLimitsPolitics {
     public var maxSize: Measurement<UnitInformationStorage> {
         return Measurement(value: Double(self), unit: .bytes)

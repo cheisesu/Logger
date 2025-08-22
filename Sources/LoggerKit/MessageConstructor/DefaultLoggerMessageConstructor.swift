@@ -1,6 +1,7 @@
 import Foundation
 
 /// Default constructor of final messages for logger engines
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public struct DefaultLoggerMessageConstructor: LoggerMessageConstructor, @unchecked Sendable {
     private let options: LoggerEngineOption
     private let logTypeStringConverter: LogTypeStringConvertible
@@ -43,6 +44,7 @@ public struct DefaultLoggerMessageConstructor: LoggerMessageConstructor, @unchec
     }
 }
 
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension LoggerMessageConstructor where Self == DefaultLoggerMessageConstructor {
     /// Default message constructor that uses all default logger options
     public static var `default`: LoggerMessageConstructor {

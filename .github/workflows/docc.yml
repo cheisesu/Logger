@@ -8,18 +8,12 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 jobs:
-  docs:
-    name: Building package documentation
+  resolve_tag:
+    name: Resolving release tag
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      TAG: ${{ steps.get_last_release.outputs.TAG }}
     steps:
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: 6
-          skip-signature-verification: true
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
@@ -32,39 +26,115 @@ jobs:
             --json tagName,isPrerelease,isDraft,isLatest \
             --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-          echo $TAG
+          echo "Resolved TAG=$TAG"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: Building package documentation for ${{ matrix.falvor }}
+    needs: resolve_tag
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - flavor: apple
+            os: macos-latest
+            subdir: apple
+          - flavor: linux
+            os: ubuntu-latest
+            subdir: linux
+    steps:
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: 6
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - name: Checkout tag
         run: |
-          git checkout ${{ steps.get_last_release.outputs.TAG }}
-      - name: Restore previously deployed docs
-        run: |
-          git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages-tmp || true
-          mkdir -p docs
-          cp -r gh-pages-tmp/* docs/ || true
+          git checkout ${{ needs.resolve_tag.outputs.TAG }}
       - name: DocC
-        run: swift package --allow-writing-to-package-directory generate-documentation --target LoggerKit --output-path ./docs/${{ steps.get_last_release.outputs.TAG }} --transform-for-static-hosting --disable-indexing --hosting-base-path LoggerKit/${{ steps.get_last_release.outputs.TAG }}
-      - name: Update doc's version index.html
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=documentation/loggerkit">' > "./docs/${{ steps.get_last_release.outputs.TAG }}/index.html"
-      - name: Update redirecting to this version
-        run: |
-          cd ./docs
-          TAG="${{ steps.get_last_release.outputs.TAG }}"
-          printf '%s\n' \
-            '<!doctype html>' \
-            '<meta charset="utf-8">' \
-            "<meta http-equiv=\"refresh\" content=\"0; url=./${TAG}/documentation/loggerkit/\">" \
-            "<link rel=\"canonical\" href=\"./${TAG}/documentation/loggerkit/\">" \
-            '<title>Redirecting…</title>' \
-            '<p>Redirecting to latest docs…</p>' \
-            "<script>location.replace(\"./${TAG}/documentation/loggerkit/\");</script>" \
-            > index.html
-      - name: Publish to gh-pages (preserve previous versions)
-        uses: peaceiris/actions-gh-pages@v4
+          rm -rf ./${{ needs.resolve_tag.outputs.TAG }} || true
+          swift package --allow-writing-to-package-directory\
+            generate-documentation \
+            --target LoggerKit \
+            --output-path ./${{ needs.resolve_tag.outputs.TAG }} \
+            --transform-for-static-hosting \
+            --disable-indexing \
+            --hosting-base-path ${{ github.event.repository.name }}/${{ matrix.subdir }}/${{ needs.resolve_tag.outputs.TAG }}
+          touch ./${{ needs.resolve_tag.outputs.TAG }}/.nojekyll
+      - name: Archive site (Apple)
+        run: tar -C ./${{ needs.resolve_tag.outputs.TAG }} -czf docs-${{ matrix.subdir }}.tar.gz .
+      - uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          publish_branch: gh-pages
-          keep_files: true  
+          name: docs-${{ matrix.subdir }}
+          path: docs-${{ matrix.subdir }}.tar.gz
+  
+  assemble_and_deploy_vps:
+    name: Assemble & Publish gh-pages
+    needs: [resolve_tag, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PATH: ${{ secrets.VPS_PATH }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Checkout tag
+        run: |
+          git checkout ${{ needs.resolve_tag.outputs.TAG }}
+      - name: Copy DocWeb content
+        run: |
+          cp -r DocWeb DocWeb-Full
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-linux
+          path: .
+      - name: Download Apple artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-apple
+          path: .
+      - name: Extract files
+        run: |
+          VER="${{ needs.resolve_tag.outputs.TAG }}"
+          mkdir -p "DocWeb-Full/docs/linux/${VER}"
+          tar -xzf docs-linux.tar.gz -C "DocWeb-Full/docs/linux/${VER}"
+          mkdir -p "DocWeb-Full/docs/apple/${VER}"
+          tar -xzf docs-apple.tar.gz -C "DocWeb-Full/docs/apple/${VER}"
+      - name: Add VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+      - name: Rsync DocWeb to VPS
+        uses: Burnett01/rsync-deployments@7.0.2
+        with:
+          switches: -avz --delete --exclude=".git" --exclude="node_modules"
+          path: DocWeb-Full/
+          remote_path: ${{ env.VPS_PATH }}/
+          remote_host: ${{ env.VPS_HOST }}
+          remote_user: ${{ env.VPS_USER }}
+          remote_key: ${{ env.VPS_SSH_KEY }}
+      - name: Remote npm install & restart service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.VPS_PATH }}
+            /bin/npm install
+            sudo /bin/systemctl restart loggerkit-app.service
