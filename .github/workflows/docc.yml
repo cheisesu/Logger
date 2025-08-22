@@ -1,5 +1,9 @@
 name: Build documentation
-on: workflow_call
+# on: workflow_call
+on:
+  push:
+    branches:
+      - 38*
 permissions:
   contents: write
   pages: write
@@ -22,9 +26,10 @@ jobs:
       - name: Get previous stable release tag
         id: get_last_release
         run: |
-          TAG=$(gh release list \
-            --json tagName,isPrerelease,isDraft,isLatest \
-            --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
+          # TAG=$(gh release list \
+          #   --json tagName,isPrerelease,isDraft,isLatest \
+          #   --jq '[.[] | select(.isDraft == false and .isPrerelease == false and .isLatest == true)] | .[0].tagName')
+          TAG=v0.1.3
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
           echo "Resolved TAG=$TAG"
         env:
@@ -56,7 +61,7 @@ jobs:
           fetch-tags: true
       - name: Checkout tag
         run: |
-          git checkout ${{ needs.resolve_tag.outputs.TAG }}
+          git checkout -b origin/38-replace-github-pages-to-vps #${{ needs.resolve_tag.outputs.TAG }}
       - name: DocC
         run: |
           rm -rf ./${{ needs.resolve_tag.outputs.TAG }} || true
@@ -93,7 +98,7 @@ jobs:
           fetch-tags: true
       - name: Checkout tag
         run: |
-          git checkout ${{ needs.resolve_tag.outputs.TAG }}
+          git checkout -b origin/38-replace-github-pages-to-vps #${{ needs.resolve_tag.outputs.TAG }}
       - name: Copy DocWeb content
         run: |
           cp -r DocWeb DocWeb-Full
