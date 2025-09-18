@@ -17,7 +17,23 @@
     <header class="flex justify-between items-center p-6 max-w-5xl mx-auto">
         <h1 class="text-xl font-bold">LoggerKit</h1>
         <nav class="space-x-4 text-sm flex items-center">
-            <a href="#docs" class="hover:underline">Docs</a>
+            <!-- Docs dropdown -->
+            <div class="relative" id="docs-dd">
+                <button id="docs-dd-btn" class="hover:underline inline-flex items-center gap-1" aria-haspopup="true"
+                    aria-expanded="false">
+                    Docs ▾
+                </button>
+                <div id="docs-dd-menu"
+                    class="hidden absolute right-0 mt-2 w-56 rounded-xl border dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-2 text-left">
+                    <div class="px-2 py-1 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Platforms
+                    </div>
+                    <a id="docs-link-apple" class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+                        href="#">Apple</a>
+                    <a id="docs-link-linux" class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+                        href="#">Linux</a>
+                </div>
+            </div>
             <a href="#tutorials" class="hover:underline">Tutorials</a>
             <a href="https://github.com/cheisesu/LoggerKit" class="hover:underline">GitHub</a>
             <button id="theme-toggle" class="ml-4 text-xl" title="Toggle theme">🌙</button>
@@ -55,8 +71,6 @@ let logger: LoggerEngine = ConsoleLogger()
 logger.write("LoggerKit is working!")
             </code></pre>
         </section>
-
-        <a href="#docs" class="text-indigo-600 font-semibold hover:underline">View full docs</a>
     </main>
 
     <footer class="text-center text-sm text-gray-500 dark:text-gray-400 mt-12 pb-6">
@@ -81,13 +95,10 @@ logger.write("LoggerKit is working!")
 
         const stored = localStorage.getItem('theme');
         if (stored) {
-            console.log("==> 1");
             setTheme(stored);
         } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            console.log("==> 2");
             setTheme('dark');
         } else {
-            console.log("==> 3");
             setTheme('light');
         }
 
@@ -95,6 +106,43 @@ logger.write("LoggerKit is working!")
             const isDark = root.classList.contains('dark');
             setTheme(isDark ? 'light' : 'dark');
         });
+    </script>
+    <script>
+        // --- dropdown open/close ---
+        const ddBtn = document.getElementById('docs-dd-btn');
+        const ddMenu = document.getElementById('docs-dd-menu');
+        ddBtn.addEventListener('click', () => {
+            const open = ddMenu.classList.toggle('hidden') === false;
+            ddBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('docs-dd').contains(e.target)) {
+                ddMenu.classList.add('hidden');
+                ddBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // --- fetch latest versions ---
+        async function loadVersions() {
+            try {
+                const r = await fetch('/api/docs/versions.json', { cache: 'no-store' });
+                if (!r.ok) throw new Error('versions fetch failed');
+                const v = await r.json();
+
+                const appleA = document.getElementById('docs-link-apple');
+                const linuxA = document.getElementById('docs-link-linux');
+
+                appleA.href = (v.apple && v.apple.href) || '/docs/apple/latest/';
+                linuxA.href = (v.linux && v.linux.href) || '/docs/linux/latest/';
+
+                if (v.apple?.latest) appleA.textContent = `Apple (${v.apple.latest})`;
+                if (v.linux?.latest) linuxA.textContent = `Linux (${v.linux.latest})`;
+            } catch (e) {
+                document.getElementById('docs-link-apple').href = '/docs/apple/latest/';
+                document.getElementById('docs-link-linux').href = '/docs/linux/latest/';
+            }
+        }
+        loadVersions();
     </script>
 </body>
 

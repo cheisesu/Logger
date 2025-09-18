@@ -146,6 +146,16 @@ jobs:
           remote_host: ${{ env.VPS_HOST }}
           remote_user: ${{ env.VPS_USER }}
           remote_key: ${{ env.VPS_SSH_KEY }}
+      - name: Write latest version
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.VPS_PATH }}
+            echo "{\"latest_release\": \"${{ needs.resolve_tag.outputs.TAG }}\"}" >> meta.json
       - name: Remote npm install & restart service
         uses: appleboy/ssh-action@v1
         with:
