@@ -24,14 +24,14 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_EmptyItems_ReturnsNil() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [], logTypeStringConverter: logTypeStringConverter)
-        let message = constructor.makeMessage(category: category, logType: logType,
+        let message = constructor.makeMessage(from: [], category: category, logType: logType,
                                               separator: separator, terminator: terminator, file: file, line: line)
         XCTAssertNil(message)
     }
 
     func test_MultipleItems_JoinedWithCorrectSeparator() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -40,7 +40,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_EmptyOptions_ResultsOnlyLogTypeAndSourceMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -49,7 +49,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintCategoryOption_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printCategory], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -58,7 +58,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintFileOption_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printFile], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -67,7 +67,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintLineOption_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printLine], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -76,7 +76,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintCategoryAndFileOptions_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printFile], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -85,7 +85,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintCategoryAndLineOptions_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printLine], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -94,7 +94,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintFileAndLineOptions_ResultsCorrectMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printFile, .printLine], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -103,7 +103,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_PrintCategoryFileAndLineOptions_ResultsFullMessage() throws {
         let constructor = DefaultLoggerMessageConstructor(options: [.printCategory, .printLine, .printFile], logTypeStringConverter: logTypeStringConverter)
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -114,7 +114,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 
     func test_DefaultLogger_ResultsFullMessage() throws {
         let constructor: LoggerMessageConstructor = .default
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
@@ -124,7 +124,7 @@ final class DefaultLoggerMessageConstructor_tests: XCTestCase {
 #if canImport(os)
     func test_ConsoleLogger_ResultsMessageWithoutCategory() throws {
         let constructor: LoggerMessageConstructor = .console
-        let _message = constructor.makeMessage(from: sourceMessage1, sourceMessage2,
+        let _message = constructor.makeMessage(from: [sourceMessage1, sourceMessage2],
                                                category: category, logType: logType,
                                                separator: separator, terminator: terminator, file: file, line: line)
         let message = try XCTUnwrap(_message)
