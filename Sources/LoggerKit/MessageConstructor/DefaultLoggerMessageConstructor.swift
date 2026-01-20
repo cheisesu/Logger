@@ -16,7 +16,37 @@ public struct DefaultLoggerMessageConstructor: LoggerMessageConstructor, @unchec
     }
 
     public func makeMessage(from items: Any..., category: any LoggerCategory, logType: LogType,
-                            separator: String, terminator: String, file: String, line: Int) -> String? {
+                            separator: String, terminator: String, file: String, line: Int) -> String?
+    {
+        guard !items.isEmpty else { return nil }
+        var resultMessage = items.map { String(describing: $0) }.joined(separator: separator)
+
+        if let typeString = logTypeStringConverter.string(for: logType) {
+            resultMessage = "\(typeString) \(resultMessage)"
+        }
+
+        if options.contains(.printCategory) {
+            resultMessage = "[\(category.rawLoggerCategory)] \(resultMessage)"
+        }
+
+        var meta: [String] = []
+        if options.contains(.printFile) {
+            meta.append(file)
+        }
+        if options.contains(.printLine) {
+            meta.append("\(line)")
+        }
+        var metaString: String? = meta.joined(separator: ":")
+        if metaString?.count == 0 {
+            metaString = nil
+        }
+        let result = [resultMessage, metaString].compactMap { $0 }.joined(separator: "\n") + terminator
+        return result
+    }
+
+    public func makeMessage(from items: [any Sendable], category: any LoggerCategory, logType: LogType, separator: String,
+                            terminator: String, file: String, line: Int) -> String?
+    {
         guard !items.isEmpty else { return nil }
         var resultMessage = items.map { String(describing: $0) }.joined(separator: separator)
 
