@@ -38,7 +38,7 @@ app.get("/docs/:platform(apple|linux)/latest", (req, res) => {
   if (!tag) return res.status(503).send("latest not available");
   res.redirect(
     302,
-    `/docs/${req.params.platform}/${tag}/documentation/loggerkit/`
+    `/docs/${req.params.platform}/${tag}/documentation/loggerkit/`,
   );
 });
 
@@ -46,7 +46,7 @@ app.get("/docs/:platform(apple|linux)/:ver", (req, res) => {
   const { platform, ver } = req.params;
   res.redirect(
     302,
-    `/docs/${platform}/${ver}/documentation/${DOCUMENTATION_NAME}/`
+    `/docs/${platform}/${ver}/documentation/${DOCUMENTATION_NAME}/`,
   );
 });
 
@@ -56,9 +56,9 @@ app.get(
     const { platform, ver } = req.params;
     res.redirect(
       302,
-      `/docs/${platform}/${ver}/documentation/${DOCUMENTATION_NAME}/`
+      `/docs/${platform}/${ver}/documentation/${DOCUMENTATION_NAME}/`,
     );
-  }
+  },
 );
 
 app.get(
@@ -69,7 +69,7 @@ app.get(
     if (!fs.existsSync(p)) return next();
     const result = fs.readFileSync(p, "utf8");
     res.type("html").send(result);
-  }
+  },
 );
 
 app.get("/docs/:platform(apple|linux)/:ver/*", (req, res, next) => {
@@ -80,6 +80,10 @@ app.get("/docs/:platform(apple|linux)/:ver/*", (req, res, next) => {
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.get("/index.js", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.js"));
 });
 
 app.use((req, res) => {

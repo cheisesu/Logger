@@ -12,7 +12,7 @@ public protocol LoggerEngine: Sendable {
     ///   - terminator: The string to print after all items have been printed.
     ///   - file: File, where the method is called.
     ///   - line: Line in the file.
-    @available(*, noasync, message: "Use async version of `AsyncLoggerEngine` instead.")
+    @available(*, noasync, message: "Use async version of `LoggerEngine` instead.")
     func write(_ items: [Any], category: LoggerCategory?, logType: LogType, separator: String, terminator: String, file: String, line: Int)
     
     /// Writes the textual representations of the given items into the source engine.
@@ -41,7 +41,7 @@ extension LoggerEngine {
     ///   - terminator: The string to print after all items have been printed. The default is a newline (`"\n"`).
     ///   - file: File, where the method is called. The default value is `#fileID`.
     ///   - line: Line in the file. The default value is a number of line of the call (`#line`).
-    @available(*, noasync, message: "Use async version of `AsyncLoggerEngine` instead.")
+    @available(*, noasync, message: "Use async version of `LoggerEngine` instead.")
     public func write(_ items: Any..., category: LoggerCategory? = nil, logType: LogType = .default,
                       separator: String = " ", terminator: String = "\n",
                       file: String = #fileID, line: Int = #line)
@@ -58,7 +58,7 @@ extension LoggerEngine {
     ///   - terminator: The string to print after all items have been printed. The default is a newline (`"\n"`).
     ///   - file: File, where the method is called. The default value is `#fileID`.
     ///   - line: Line in the file. The default value is a number of line of the call (`#line`).
-    @available(*, noasync, message: "Use async version of `AsyncLoggerEngine` instead.")
+    @available(*, noasync, message: "Use async version of `LoggerEngine` instead.")
     public func write(_ items: [Any], category: LoggerCategory? = nil, logType: LogType = .default,
                       separator: String = " ", terminator: String = "\n",
                       file: String = #fileID, line: Int = #line)
