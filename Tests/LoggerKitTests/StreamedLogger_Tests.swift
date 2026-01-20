@@ -18,7 +18,7 @@ final class StreamedLogger_Tests: XCTestCase {
         let line = 12
         let separator = ":"
         let terminator = "]]"
-        let constructedMessage = messageContructor.makeMessage(from: message1, message2, category: category, logType: logType,
+        let constructedMessage = messageContructor.makeMessage(from: [message1, message2], category: category, logType: logType,
                                                                separator: separator, terminator: terminator, file: file, line: line)
 
         logger.write(message1, message2, category: category, logType: logType,
@@ -40,7 +40,7 @@ final class StreamedLogger_Tests: XCTestCase {
         let line = 12
         let separator = ":"
         let terminator = "]]"
-        let constructedMessage = messageContructor.makeMessage(from: message1, message2, category: category, logType: logType,
+        let constructedMessage = messageContructor.makeMessage(from: [message1, message2], category: category, logType: logType,
                                                                separator: separator, terminator: terminator, file: file, line: line)
 
         logger.write(message1, message2, category: nil, logType: logType,
