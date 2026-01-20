@@ -1,5 +1,9 @@
 name: Build documentation
-on: workflow_call
+# on: workflow_call
+on:
+  push:
+    branches:
+      - 38*
 permissions:
   contents: write
   pages: write
@@ -56,7 +60,7 @@ jobs:
           fetch-tags: true
       - name: Checkout tag
         run: |
-          git checkout ${{ needs.resolve_tag.outputs.TAG }}
+          git checkout -b origin/38-replace-github-pages-to-vps #${{ needs.resolve_tag.outputs.TAG }}
       - name: DocC
         run: |
           rm -rf ./${{ needs.resolve_tag.outputs.TAG }} || true
@@ -66,7 +70,7 @@ jobs:
             --output-path ./${{ needs.resolve_tag.outputs.TAG }} \
             --transform-for-static-hosting \
             --disable-indexing \
-            --hosting-base-path ${{ github.event.repository.name }}/${{ matrix.subdir }}/${{ needs.resolve_tag.outputs.TAG }}
+            --hosting-base-path docs/${{ matrix.subdir }}/${{ needs.resolve_tag.outputs.TAG }}
           touch ./${{ needs.resolve_tag.outputs.TAG }}/.nojekyll
       - name: Archive site (Apple)
         run: tar -C ./${{ needs.resolve_tag.outputs.TAG }} -czf docs-${{ matrix.subdir }}.tar.gz .
@@ -93,10 +97,7 @@ jobs:
           fetch-tags: true
       - name: Checkout tag
         run: |
-          git checkout ${{ needs.resolve_tag.outputs.TAG }}
-      - name: Copy DocWeb content
-        run: |
-          cp -r DocWeb DocWeb-Full
+          git checkout -b origin/38-replace-github-pages-to-vps #${{ needs.resolve_tag.outputs.TAG }}
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
@@ -110,10 +111,10 @@ jobs:
       - name: Extract files
         run: |
           VER="${{ needs.resolve_tag.outputs.TAG }}"
-          mkdir -p "DocWeb-Full/docs/linux/${VER}"
-          tar -xzf docs-linux.tar.gz -C "DocWeb-Full/docs/linux/${VER}"
-          mkdir -p "DocWeb-Full/docs/apple/${VER}"
-          tar -xzf docs-apple.tar.gz -C "DocWeb-Full/docs/apple/${VER}"
+          mkdir -p "docs/linux/${VER}"
+          tar -xzf docs-linux.tar.gz -C "docs/linux/${VER}"
+          mkdir -p "docs/apple/${VER}"
+          tar -xzf docs-apple.tar.gz -C "docs/apple/${VER}"
       - name: Add VPS host key
         run: |
           mkdir -p ~/.ssh
@@ -121,12 +122,40 @@ jobs:
       - name: Rsync DocWeb to VPS
         uses: Burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avz --delete --exclude=".git" --exclude="node_modules"
-          path: DocWeb-Full/
+          switches: -avz --delete --exclude=".git" --exclude="node_modules" --exclude="docs/**"
+          path: DocWeb/
           remote_path: ${{ env.VPS_PATH }}/
           remote_host: ${{ env.VPS_HOST }}
           remote_user: ${{ env.VPS_USER }}
           remote_key: ${{ env.VPS_SSH_KEY }}
+      - name: Rsync Apple doc version
+        uses: burnett01/rsync-deployments@7.0.2
+        with:
+          switches: -avz --delete
+          path: docs/apple/${{ needs.resolve_tag.outputs.TAG }}/
+          remote_path: ${{ env.VPS_PATH }}/docs/apple/${{ needs.resolve_tag.outputs.TAG }}/
+          remote_host: ${{ env.VPS_HOST }}
+          remote_user: ${{ env.VPS_USER }}
+          remote_key: ${{ env.VPS_SSH_KEY }}
+      - name: Rsync Linux doc version
+        uses: burnett01/rsync-deployments@7.0.2
+        with:
+          switches: -avz --delete
+          path: docs/linux/${{ needs.resolve_tag.outputs.TAG }}/
+          remote_path: ${{ env.VPS_PATH }}/docs/linux/${{ needs.resolve_tag.outputs.TAG }}/
+          remote_host: ${{ env.VPS_HOST }}
+          remote_user: ${{ env.VPS_USER }}
+          remote_key: ${{ env.VPS_SSH_KEY }}
+      - name: Write latest version
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.VPS_PATH }}
+            echo "{\"latest_release\": \"${{ needs.resolve_tag.outputs.TAG }}\"}" >> meta.json
       - name: Remote npm install & restart service
         uses: appleboy/ssh-action@v1
         with:
