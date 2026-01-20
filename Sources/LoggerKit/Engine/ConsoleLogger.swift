@@ -8,6 +8,7 @@ import os
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public final class ConsoleLogger: @unchecked Sendable {
     private let accessQueue: DispatchQueue
+    private let accessKey: DispatchQueue._SafeKey
     private var osLogs: [String: OSLog]
     private let defaultCategory: LoggerCategory
     private let subsystem: String
@@ -17,8 +18,8 @@ public final class ConsoleLogger: @unchecked Sendable {
     /// Minimal log level for messages.
     @available(*, noasync)
     public var logLevel: LogType {
-        get { accessQueue.sync { _logLevel } }
-        set { accessQueue.sync(flags: .barrier) { _logLevel = newValue } }
+        get { accessQueue._safeSync(on: accessKey) { _logLevel } }
+        set { accessQueue._safeSync(on: accessKey) { _logLevel = newValue } }
     }
 
     /// Initializes console logger engine.
@@ -32,6 +33,7 @@ public final class ConsoleLogger: @unchecked Sendable {
                 messageConstructor: LoggerMessageConstructor = .default, logLevel: LogType = .default)
     {
         accessQueue = DispatchQueue(label: "com.loggerkit.logger.console")
+        accessKey = accessQueue._registerSafe()
         self.subsystem = subsystem
         self.defaultCategory = defaultCategory
         osLogs = [
@@ -72,7 +74,7 @@ extension ConsoleLogger: LoggerEngine {
     public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)
     {
-        accessQueue.sync {
+        accessQueue._safeSync(on: accessKey) {
             guard logType.rawValue >= _logLevel.rawValue else { return }
             let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
                                                          separator: separator, terminator: terminator, file: file, line: line)

@@ -5,19 +5,21 @@ public final class StreamedLogger: @unchecked Sendable {
     private let defaultCategory: LoggerCategory
     private let messageConstructor: LoggerMessageConstructor
     private let accessQueue: DispatchQueue
+    private let accessKey: DispatchQueue._SafeKey
     private var stream: LoggerStream
     private var _logLevel: LogType
 
     /// Minimal log level for messages.
     @available(*, noasync)
     public var logLevel: LogType {
-        get { accessQueue.sync { _logLevel } }
-        set { accessQueue.sync(flags: .barrier) { _logLevel = newValue } }
+        get { accessQueue._safeSync(on: accessKey) { _logLevel } }
+        set { accessQueue._safeSync(on: accessKey) { _logLevel = newValue } }
     }
 
     public init(defaultCategory: LoggerCategory = "default", messageConstructor: LoggerMessageConstructor = .default,
                 stream: LoggerStream, logLevel: LogType = .default) {
         accessQueue = DispatchQueue(label: "com.loggerkit.logger.streamed")
+        accessKey = accessQueue._registerSafe()
         self.defaultCategory = defaultCategory
         self.messageConstructor = messageConstructor
         self.stream = stream
@@ -55,7 +57,7 @@ extension StreamedLogger: LoggerEngine {
     public func write(_ items: [Any], category: (any LoggerCategory)?, logType: LogType,
                       separator: String, terminator: String, file: String, line: Int)
     {
-        accessQueue.sync {
+        accessQueue._safeSync(on: accessKey) {
             let message = messageConstructor.makeMessage(from: items, category: category ?? defaultCategory, logType: logType,
                                                          separator: separator, terminator: terminator, file: file, line: line)
             guard let message else { return }
