@@ -21,6 +21,7 @@ public struct BlockFileStreamTransformer: FileLoggerStreamTransformable {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 public final class FileLoggerStream: @unchecked Sendable {
     private let accessQueue: DispatchQueue
+    private let accessKey: DispatchQueue._SafeKey
     private let sourceURL: URL
     private var fileHandle: FileHandle
     private let fileManager: FileManager
@@ -33,6 +34,7 @@ public final class FileLoggerStream: @unchecked Sendable {
     public init(_ sourceURL: URL, encoding: String.Encoding = .utf8, fileManager: FileManager = .default,
                 fileLimits: FileLimitsPolitics = 0, fileTransferPolicy: FileTransferPolicy? = nil) throws {
         accessQueue = DispatchQueue(label: "com.loggerkit.stream.file")
+        accessKey = accessQueue._registerSafe()
         self.sourceURL = sourceURL
         self.fileManager = fileManager
         self.fileLimits = fileLimits
@@ -72,7 +74,7 @@ public final class FileLoggerStream: @unchecked Sendable {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
 extension FileLoggerStream: LoggerStream {
     public func write(_ string: String) {
-        accessQueue.sync {
+        accessQueue._safeSync(on: accessKey) {
             performWrite(string)
         }
     }
